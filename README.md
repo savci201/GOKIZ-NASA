@@ -1,2 +1,1 @@
-# Nasag-kiz
 Nasa gökiz
