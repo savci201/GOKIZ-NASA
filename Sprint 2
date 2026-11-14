@@ -1,0 +1,73 @@
+# SPRINT 2 REPORT
+## Solution Development and Initial Web Platform Design
+
+**Team Name:** GÖKİZ  
+**Project Name:** AQUAVEIN-SAR  
+**Challenge:** Dancing with SAR  
+**Event:** NASA Space Apps Challenge Niğde 2026  
+**Date:** November 14, 2026  
+**Sprint:** 2
+
+### 1. Sprint Objective
+
+The main objective of Sprint 2 was to transform the scientific research conducted during Sprint 1 into a practical digital solution concept and initiate the development of AQUAVEIN-SAR, a satellite-data-based web platform focusing on Submarine Groundwater Discharge (SGD).
+
+### 2. Activities Completed
+
+- Evaluated the scientific findings obtained during Sprint 1.
+- Developed the AQUAVEIN-SAR project concept based on Submarine Groundwater Discharge (SGD).
+- Investigated the relationship between coastal aquifers, groundwater movement, and marine environments.
+- Explored the potential use of satellite remote sensing data, particularly Synthetic Aperture Radar (SAR), to investigate possible coastal groundwater discharge areas.
+- Discussed how satellite-derived indicators and environmental information could contribute to identifying potential SGD locations.
+- Designed the initial concept of a web-based decision support system.
+- Started developing the AQUAVEIN-SAR website and its initial user interface.
+- Began organizing the platform around coastal monitoring, groundwater resources, and environmental data visualization.
+- Discussed the potential for assessing groundwater availability and supporting sustainable water resource management.
+
+### 3. Project Concept: AQUAVEIN-SAR
+
+AQUAVEIN-SAR is a proposed satellite-data-based decision support platform designed to investigate Submarine Groundwater Discharge (SGD) along coastal regions.
+
+SGD is a natural phenomenon in which groundwater from coastal aquifers enters the ocean through the seabed.
+
+The project aims to explore potential groundwater discharge locations by evaluating satellite-derived observations and relevant environmental information.
+
+By combining remote sensing indicators with additional hydrogeological data, AQUAVEIN-SAR aims to support the assessment of potential groundwater resources and help identify areas that may be suitable for sustainable groundwater management.
+
+### 4. Initial Web Platform Development
+
+During this sprint, the GÖKİZ team initiated the development of the AQUAVEIN-SAR web platform.
+
+The initial development activities included:
+
+- Establishing the website structure.
+- Designing the initial user interface.
+- Organizing scientific content related to Submarine Groundwater Discharge.
+- Planning the presentation of satellite-based environmental information.
+- Developing the initial concept for visualizing potential coastal groundwater discharge areas.
+- Structuring the platform as a digital decision support tool.
+
+### 5. Scientific Limitations and Considerations
+
+The team recognized that satellite observations cannot directly measure submarine groundwater discharge or independently determine safe groundwater extraction volumes.
+
+Therefore, satellite-derived indicators must be evaluated together with field measurements, hydrogeological information, and environmental data.
+
+AQUAVEIN-SAR is intended to provide preliminary assessments and decision-support information rather than definitive groundwater measurements or extraction permissions.
+
+### 6. Sprint Outcomes
+
+- The AQUAVEIN-SAR project concept was established.
+- Submarine Groundwater Discharge (SGD) was identified as the main scientific focus.
+- Satellite-based monitoring approaches were investigated.
+- The initial web platform development was initiated.
+- The decision support system concept was outlined.
+- Scientific limitations and validation requirements were identified.
+
+### 7. Next Steps
+
+During Sprint 3, the team will continue developing the AQUAVEIN-SAR platform, investigate relevant satellite datasets, explore data visualization methods, and work toward integrating scientific information into the system.
+
+**Sprint Status:** Completed
+
+**Team: GÖKİZ 🚀**
