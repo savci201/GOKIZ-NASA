@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AquaVein-SAR v6.0 | 3B Dünya, Sarı Uydu Keşfi & Sualtı Tatlı Su Çıkarma Sistemi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            ocean: { 950: '#020710', 900: '#06101e', 800: '#0a192f', 700: '#112645' },
+            biocyan: '#00f2fe',
+            nasablue: '#0b3d91',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body { background-color: #020710; color: #e2e8f0; overflow-x: hidden; font-family: 'Inter', sans-serif; }
+    .scada-panel {
+      background: rgba(6, 16, 30, 0.90);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(0, 242, 254, 0.22);
+      box-shadow: 0 10px 35px -5px rgba(0, 0, 0, 0.75);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #020710; }
+    ::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #00f2fe; }
+    input[type="range"] { accent-color: #00f2fe; }
+    @keyframes eqBarAnim { 0%, 100% { height: 4px; } 50% { height: 15px; } }
+    .eq-bar-active { animation: eqBarAnim 0.45s ease-in-out infinite; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-biocyan selection:text-ocean-950">
+
+  <!-- TOP NAVIGATION & ACTION BAR -->
+  <header class="sticky top-0 z-40 scada-panel border-b border-cyan-500/30 px-3 lg:px-5 py-2.5">
+    <div class="max-w-[1920px] mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-biocyan to-blue-700 p-[1.5px] shadow-lg shadow-cyan-500/20">
+          <div class="w-full h-full bg-ocean-950 rounded-[10px] flex items-center justify-center">
+            <i class="fa-solid fa-earth-americas text-amber-400 text-lg"></i>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-display font-bold text-base lg:text-lg tracking-tight text-white">AQUAVEIN<span class="text-biocyan">-SAR</span></span>
+            <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 font-semibold">v6.0 • 3B Dünya & Sualtı Sistemi</span>
+          </div>
+          <p class="text-[11px] text-slate-400 hidden sm:block">Uzaydaki Sarı SAR Uydusu ile Deniz/Okyanus Tatlı Su Kaynaklarını Bulup Çıkarma Simülasyonu</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-1.5">
+        <button onclick="startNarratedPitch(30)" id="btn-pitch-30" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-ocean-950 font-mono text-xs font-extrabold flex items-center gap-1.5 shadow-lg transition-all">
+          <i class="fa-solid fa-film"></i><span>🎬 30sn NASA Video (Sarı Uydu → Sualtı)</span>
+        </button>
+        <button onclick="startNarratedPitch(60)" id="btn-pitch-60" class="px-3 py-1.5 rounded-lg bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-400/50 font-mono text-xs font-bold flex items-center gap-1.5 transition-all">
+          <i class="fa-solid fa-clapperboard"></i><span>🎬 60sn Yerel Video (EN Ses / TR Altyazı)</span>
+        </button>
+        <button onclick="testVoiceImmediate()" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-mono text-xs font-bold flex items-center gap-1.5 transition-all">
+          <i class="fa-solid fa-volume-high"></i><span>🔊 Sesi Test Et</span>
+          <span id="live-eq-bars" class="hidden items-end gap-0.5 h-3.5 ml-0.5">
+            <span class="w-0.5 bg-emerald-400 eq-bar-active"></span>
+            <span class="w-0.5 bg-amber-400 eq-bar-active" style="animation-delay:0.15s"></span>
+            <span class="w-0.5 bg-biocyan eq-bar-active" style="animation-delay:0.3s"></span>
+          </span>
+        </button>
+        <button onclick="openPresentationModal()" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-biocyan to-blue-500 hover:opacity-95 text-ocean-950 font-mono text-xs font-extrabold flex items-center gap-1.5 shadow-lg transition-all">
+          <i class="fa-solid fa-chalkboard-user"></i><span>📊 7 Slayt Sunumu Aç</span>
+        </button>
+        <button onclick="downloadPresentationPDF()" id="btn-top-pdf-download" class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white border border-rose-400 font-mono text-xs font-extrabold flex items-center gap-1.5 shadow-lg transition-all">
+          <i class="fa-solid fa-file-pdf"></i><span>📄 7 Slayt PDF İndir</span>
+        </button>
+        <button onclick="openSprintModal()" class="px-2.5 py-1.5 rounded-lg bg-emerald-600/25 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/50 font-mono text-xs font-bold flex items-center gap-1.5 transition-all">
+          <i class="fa-brands fa-github"></i><span>📦 GitHub & Drive</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="max-w-[1920px] mx-auto mt-2 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-1 overflow-x-auto pb-1 flex-1">
+        <button onclick="setSimulationStage(1)" id="stage-btn-1" class="stage-pill px-2.5 py-1 rounded-lg font-mono text-[11px] font-bold flex items-center gap-1.5 bg-amber-400 text-ocean-950 shadow">
+          <span class="w-4 h-4 rounded-full bg-ocean-950 text-amber-400 flex items-center justify-center text-[10px]">1</span><span>1. Uzayda 3B Dünya & Sarı SAR Uydusu</span>
+        </button>
+        <i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
+        <button onclick="setSimulationStage(2)" id="stage-btn-2" class="stage-pill px-2.5 py-1 rounded-lg font-mono text-[11px] font-semibold flex items-center gap-1.5 bg-ocean-900/90 text-slate-300 border border-slate-700/70">
+          <span class="w-4 h-4 rounded-full bg-slate-800 text-biocyan flex items-center justify-center text-[10px]">2</span><span>2. Sarı Uydu Kaynağı Bulur & Yakınlaşır</span>
+        </button>
+        <i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
+        <button onclick="setSimulationStage(3)" id="stage-btn-3" class="stage-pill px-2.5 py-1 rounded-lg font-mono text-[11px] font-semibold flex items-center gap-1.5 bg-ocean-900/90 text-slate-300 border border-slate-700/70">
+          <span class="w-4 h-4 rounded-full bg-slate-800 text-biocyan flex items-center justify-center text-[10px]">3</span><span>3. Sualtına Dalış & Fay/Akifer Kilidi</span>
+        </button>
+        <i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
+        <button onclick="setSimulationStage(4)" id="stage-btn-4" class="stage-pill px-2.5 py-1 rounded-lg font-mono text-[11px] font-semibold flex items-center gap-1.5 bg-ocean-900/90 text-slate-300 border border-slate-700/70">
+          <span class="w-4 h-4 rounded-full bg-slate-800 text-biocyan flex items-center justify-center text-[10px]">4</span><span>4. Sualtı Kubbesi / Okyanus Sondajı</span>
+        </button>
+        <i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
+        <button onclick="setSimulationStage(5)" id="stage-btn-5" class="stage-pill px-2.5 py-1 rounded-lg font-mono text-[11px] font-semibold flex items-center gap-1.5 bg-ocean-900/90 text-slate-300 border border-slate-700/70">
+          <span class="w-4 h-4 rounded-full bg-slate-800 text-biocyan flex items-center justify-center text-[10px]">5</span><span>5. Dikey Riser Borusu & Hibrit RO</span>
+        </button>
+        <i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
+        <button onclick="setSimulationStage(6)" id="stage-btn-6" class="stage-pill px-2.5 py-1 rounded-lg font-mono text-[11px] font-semibold flex items-center gap-1.5 bg-ocean-900/90 text-slate-300 border border-slate-700/70">
+          <span class="w-4 h-4 rounded-full bg-slate-800 text-biocyan flex items-center justify-center text-[10px]">6</span><span>6. Kıyı Seraları & Ekonomiye Katkı</span>
+        </button>
+      </div>
+      <button onclick="openBomReportModal()" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono text-[11px] font-bold flex items-center gap-1">
+        <i class="fa-solid fa-clipboard-check"></i><span>📋 Malzeme Listesi (BoM)</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ACTIVE STAGE EXPLANATION BANNER -->
+  <div class="bg-gradient-to-r from-ocean-900 via-ocean-800 to-ocean-900 border-b border-cyan-500/30 px-4 py-2">
+    <div class="max-w-[1920px] mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+      <div class="flex items-center gap-3">
+        <div id="stage-badge-num" class="px-2.5 py-1 rounded bg-amber-400/20 border border-amber-400 text-amber-300 font-mono text-xs font-bold shrink-0">AŞAMA 1 / 6</div>
+        <div>
+          <h2 id="stage-banner-title" class="text-xs sm:text-sm font-display font-bold text-white">Uzayda 3B Dünya Üzerinde Dönen Uydular & Sarı SAR Uydusu Taraması</h2>
+          <p id="stage-banner-desc" class="text-[11px] text-slate-300">Dünya üzerindeki uydular dönerken Sarı SAR Uydusu (Sentinel-1 / NISAR) deniz ve okyanuslardaki tatlı su kaynağını bulur ve sualtındaki çıkarma sistemine yakınlaşır.</p>
+        </div>
+      </div>
+      <div id="stage-banner-formula" class="font-mono text-[11px] text-amber-300 bg-ocean-950/90 px-3 py-1 rounded border border-amber-500/30 shrink-0">
+        SAR Δσ⁰ = -7.8 dB | ΔSST = -3.8°C | FESI = 96.4 / 100
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN WORKSPACE GRID -->
+  <main class="flex-1 max-w-[1920px] w-full mx-auto p-3 grid grid-cols-1 lg:grid-cols-12 gap-3">
+    <!-- LEFT COLUMN -->
+    <section id="left-telemetry-panel" class="lg:col-span-3 flex flex-col gap-3">
+      <div class="scada-panel rounded-2xl p-3.5 flex flex-col gap-2.5">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-satellite text-amber-400 text-sm"></i>
+            <h2 class="font-display font-bold text-xs uppercase tracking-wider text-white">1. Okyanus & Deniz Kaynakları</h2>
+          </div>
+          <span class="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">8 Gerçek Saha</span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-1 bg-ocean-950 p-1 rounded-xl border border-slate-800/80 font-mono text-[10px]">
+          <button onclick="filterRegime('all')" id="reg-tab-all" class="py-1 rounded-lg bg-biocyan text-ocean-950 font-bold">TÜMÜ (8)</button>
+          <button onclick="filterRegime('sea')" id="reg-tab-sea" class="py-1 rounded-lg text-slate-300 hover:text-white">🌊 DENİZ (4)</button>
+          <button onclick="filterRegime('ocean')" id="reg-tab-ocean" class="py-1 rounded-lg text-slate-300 hover:text-white">🌍 OKYANUS (4)</button>
+        </div>
+
+        <div id="hotspot-list-container" class="flex flex-col gap-1.5 max-h-[260px] overflow-y-auto pr-1"></div>
+
+        <div class="bg-ocean-950/90 rounded-xl p-2.5 border border-amber-500/30 flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-mono uppercase text-amber-300 font-bold">Doğrulanan Literatür & Uydu Kaydı</span>
+            <span id="Readout-Regime-Badge" class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-biocyan border border-cyan-500/40 font-bold">KARSTİK DENİZ</span>
+          </div>
+          <div id="Readout-HydroType" class="text-[11px] font-semibold text-white">Mersin Ovacık Denizaltı Karst Kaynağı</div>
+          <div id="Readout-Citation" class="text-[10px] text-slate-400 font-mono leading-snug">DSİ & ODTÜ Deniz Bilimleri; Sentinel-1 SAR & Landsat-9 TIRS</div>
+          <div class="grid grid-cols-2 gap-1.5 pt-1 border-t border-slate-800/80 text-[10px] font-mono">
+            <div><span class="text-slate-500">Uydu İzi:</span> <span id="Readout-SceneID" class="text-slate-200">S1A_IW_GRDH</span></div>
+            <div><span class="text-slate-500">Kıyıya Mesafe:</span> <span id="Readout-OffshoreDist" class="text-amber-300 font-bold">1.85 km</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scada-panel rounded-2xl p-3.5 flex flex-col gap-2.5 flex-1">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-layer-group text-biocyan text-sm"></i>
+            <h2 class="font-display font-bold text-xs uppercase tracking-wider text-white">2. Sarı Uydu (SAR) & Sensör Verileri</h2>
+          </div>
+          <span id="fesi-total-score" class="font-mono text-xs font-extrabold text-amber-300">96.4/100</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="bg-ocean-950/80 p-2.5 rounded-xl border border-amber-500/30">
+            <div class="text-[10px] font-mono text-amber-300">SAR Δσ⁰ (Bragg Sönümü)</div>
+            <div id="val-sar-drop" class="text-base font-mono font-bold text-white mt-0.5">-7.8 dB</div>
+            <div class="text-[10px] font-mono text-slate-400">Sentinel-1 / NISAR</div>
+          </div>
+          <div class="bg-ocean-950/80 p-2.5 rounded-xl border border-slate-800">
+            <div class="text-[10px] font-mono text-cyan-300">Termal Anomali (ΔSST)</div>
+            <div id="val-sst-anom" class="text-base font-mono font-bold text-biocyan mt-0.5">-3.8 °C</div>
+            <div class="text-[10px] font-mono text-slate-400">Landsat 8/9 TIRS</div>
+          </div>
+          <div class="bg-ocean-950/80 p-2.5 rounded-xl border border-slate-800">
+            <div class="text-[10px] font-mono text-emerald-300">Kaynak Tuzluluğu</div>
+            <div id="val-smap-psu" class="text-base font-mono font-bold text-emerald-400 mt-0.5">2,850 ppm</div>
+            <div class="text-[10px] font-mono text-slate-400">Deniz: 38,900 ppm</div>
+          </div>
+          <div class="bg-ocean-950/80 p-2.5 rounded-xl border border-slate-800">
+            <div class="text-[10px] font-mono text-purple-300">CSEM Akifer Özdirenci</div>
+            <div id="val-csem-ohm" class="text-base font-mono font-bold text-purple-300 mt-0.5">85 Ω·m</div>
+            <div class="text-[10px] font-mono text-slate-400">Tuzlu Kayaç: 1.2 Ω·m</div>
+          </div>
+        </div>
+
+        <div class="mt-auto bg-ocean-950/90 rounded-xl p-2.5 border border-cyan-500/30">
+          <div class="flex items-center justify-between text-[11px] font-mono mb-1">
+            <span class="text-slate-300 font-semibold">FESI Uygunluk İndeksi:</span>
+            <span class="text-emerald-400 font-bold">±1.8m GPS Kilitli</span>
+          </div>
+          <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div id="fesi-bar" class="h-full bg-gradient-to-r from-amber-400 via-biocyan to-emerald-400" style="width: 96.4%"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CENTER COLUMN: 3D VIEWPORT -->
+    <section id="center-3d-panel" class="lg:col-span-6 scada-panel rounded-2xl p-3 flex flex-col h-[640px] lg:h-[740px] relative">
+      <div class="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-800 z-20">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button onclick="switchToSpaceGlobeView()" id="btn-3d-globe" class="px-3 py-1.5 rounded-xl font-mono text-xs font-extrabold bg-amber-400 text-ocean-950 shadow-lg flex items-center gap-1.5">
+            <i class="fa-solid fa-earth-americas"></i><span>🌍 1. Uzayda 3B Dünya & Sarı Uydu</span>
+          </button>
+          <button onclick="playYellowSatelliteDiscoveryAndDive()" id="btn-3d-dive" class="px-3 py-1.5 rounded-xl font-mono text-xs font-extrabold bg-gradient-to-r from-emerald-400 to-biocyan text-ocean-950 shadow-lg flex items-center gap-1.5">
+            <i class="fa-solid fa-satellite-dish"></i><span>🛰️ 2. Sarı Uydu Buluşu → Sualtına Yakınlaş</span>
+          </button>
+          <button onclick="switchToUnderwaterSystemView()" id="btn-3d-underwater" class="px-3 py-1.5 rounded-xl font-mono text-xs font-bold bg-ocean-900 text-slate-200 border border-cyan-500/40 hover:border-biocyan flex items-center gap-1.5">
+            <i class="fa-solid fa-water"></i><span>🌊 3. Sualtı Çıkarma Sistemi</span>
+          </button>
+        </div>
+        <button onclick="toggleFull3DMode()" class="px-2.5 py-1 rounded-lg bg-ocean-900 hover:bg-ocean-800 text-biocyan border border-cyan-500/30 font-mono text-[11px] flex items-center gap-1">
+          <i class="fa-solid fa-expand"></i><span>Tam Ekran</span>
+        </button>
+      </div>
+
+      <div id="webgl-container" class="relative flex-1 w-full rounded-xl overflow-hidden bg-ocean-950 border border-cyan-500/30 select-none">
+        <div class="absolute top-3 left-3 z-20 bg-ocean-950/90 border border-slate-700/80 rounded-xl px-3 py-2 font-mono text-[11px] space-y-0.5 pointer-events-none max-w-[330px]">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+            <span id="hud-target-name" class="text-white font-bold">Mersin – Ovacık Denizaltı Kaynağı</span>
+          </div>
+          <div id="hud-target-coords" class="text-biocyan">Koordinat: 36.1428°N, 33.6842°E • Derinlik: -38.5m</div>
+          <div id="hud-sequence-status" class="text-amber-300 font-bold pt-0.5">🌕 Sarı SAR Uydusu Yörüngede Hedefe Kilitlendi</div>
+        </div>
+
+        <div id="subsea-cam-toolbar" class="hidden absolute top-3 right-3 z-20 flex flex-wrap gap-1">
+          <button onclick="setUnderwaterCameraAngle('overview')" class="px-2.5 py-1 rounded-lg bg-ocean-950/90 hover:bg-biocyan hover:text-ocean-950 text-slate-200 border border-slate-700 font-mono text-[10px] font-bold">Tam Kesit</button>
+          <button onclick="setUnderwaterCameraAngle('dome')" class="px-2.5 py-1 rounded-lg bg-ocean-950/90 hover:bg-biocyan hover:text-ocean-950 text-amber-300 border border-amber-500/50 font-mono text-[10px] font-bold">🔍 Kubbe Yakın Plan</button>
+          <button onclick="setUnderwaterCameraAngle('platform')" class="px-2.5 py-1 rounded-lg bg-ocean-950/90 hover:bg-biocyan hover:text-ocean-950 text-cyan-300 border border-slate-700 font-mono text-[10px] font-bold">RO Platformu</button>
+          <button onclick="setUnderwaterCameraAngle('coast')" class="px-2.5 py-1 rounded-lg bg-ocean-950/90 hover:bg-biocyan hover:text-ocean-950 text-emerald-300 border border-slate-700 font-mono text-[10px] font-bold">🌱 Kıyı Seraları</button>
+        </div>
+
+        <div id="intrusion-warning-hud" class="hidden absolute top-14 right-3 z-30 bg-rose-950/95 border-2 border-rose-500 text-rose-200 px-3 py-2 rounded-xl font-mono text-[10px] max-w-[260px] shadow-2xl animate-pulse">
+          <div class="font-bold text-rose-400">⚠️ VENTURİ TUZLU SU GİRİŞİMİ!</div>
+          <div>Pompa çekim oranı %85'i aştığı için kubbe altından tuzlu deniz suyu karışıyor!</div>
+        </div>
+
+        <div id="pitch-overlay-banner" class="hidden absolute bottom-12 inset-x-3 z-30 bg-ocean-950/95 border-2 border-amber-400 rounded-2xl p-3.5 shadow-2xl">
+          <div class="flex items-center justify-between mb-1.5">
+            <span id="pitch-mode-badge" class="font-mono text-xs font-extrabold uppercase text-amber-300">30SN NASA GLOBAL VİDEO</span>
+            <div class="flex items-center gap-2">
+              <span id="pitch-timer-txt" class="font-mono text-sm font-extrabold text-white bg-rose-600/30 border border-rose-500/50 px-2.5 py-0.5 rounded">00:30</span>
+              <button onclick="stopNarratedPitch()" class="text-xs font-mono px-2.5 py-0.5 rounded bg-slate-800 hover:bg-rose-600 text-white font-bold">Durdur ✕</button>
+            </div>
+          </div>
+          <div class="bg-emerald-950/50 border-l-4 border-emerald-400 pl-3 py-1.5 rounded-r-lg mb-1">
+            <p id="pitch-subtitle-tr" class="text-xs sm:text-sm font-sans font-bold text-white leading-snug"></p>
+          </div>
+          <div class="bg-ocean-900/80 border-l-4 border-amber-400 pl-3 py-1 rounded-r-lg">
+            <p id="pitch-subtitle-en" class="text-[11px] sm:text-xs font-mono text-cyan-100 leading-snug"></p>
+          </div>
+        </div>
+
+        <div class="absolute bottom-2.5 inset-x-3 z-20 flex flex-wrap items-center justify-between gap-2 bg-ocean-950/90 border border-slate-800/90 px-3 py-1.5 rounded-xl font-mono text-[10px]">
+          <div class="text-slate-300"><i class="fa-solid fa-computer-mouse text-amber-400 mr-1"></i>Sol Tık: 360° Döndür • Tekerlek: Yakınlaş • Sağ Tık: Kaydır</div>
+          <span class="text-emerald-400 font-bold" id="hud-active-mode-label">MOD: UZAYDA 3B DÜNYA & SARI UYDU</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT COLUMN -->
+    <section id="right-telemetry-panel" class="lg:col-span-3 flex flex-col gap-3">
+      <div class="scada-panel rounded-2xl p-3.5 flex flex-col gap-2.5">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-gears text-emerald-400 text-sm"></i>
+            <h2 class="font-display font-bold text-xs uppercase tracking-wider text-white">3. Mühendislik Simülatörü</h2>
+          </div>
+          <span id="sim-mode-pill" class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">OPTIMUM KURULUM</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-1.5 bg-ocean-950 p-1 rounded-xl border border-slate-800 font-mono text-[10px]">
+          <button onclick="resetToOptimalMode()" id="mode-btn-implemented" class="py-1.5 rounded-lg bg-emerald-500 text-ocean-950 font-extrabold">✅ Uygulanmış Optimum</button>
+          <button onclick="enableSandboxMode()" id="mode-btn-sandbox" class="py-1.5 rounded-lg text-slate-300 hover:text-white font-semibold">🛠️ Kendin Dene (Test)</button>
+        </div>
+
+        <div class="space-y-2 bg-ocean-950/90 p-2.5 rounded-xl border border-slate-800/90 text-[11px]">
+          <div>
+            <div class="flex justify-between font-mono mb-0.5">
+              <span class="text-slate-300">1. Pompa Çekim Oranı:</span>
+              <span id="lbl-pump-rate" class="text-biocyan font-bold">78% (Optimum)</span>
+            </div>
+            <input id="slider-pump-rate" type="range" min="40" max="115" step="1" value="78" oninput="onSandboxSliderInput()" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer" />
+          </div>
+          <div>
+            <div class="flex justify-between font-mono mb-0.5">
+              <span class="text-slate-300">2. Kubbe / Manifold Çapı:</span>
+              <span id="lbl-dome-diam" class="text-amber-300 font-bold">14 m</span>
+            </div>
+            <input id="slider-dome-diam" type="range" min="8" max="24" step="1" value="14" oninput="onSandboxSliderInput()" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer" />
+          </div>
+          <div>
+            <div class="flex justify-between font-mono mb-0.5">
+              <span class="text-slate-300">3. Denizaltı Boru Çapı (DN):</span>
+              <span id="lbl-pipe-dn" class="text-emerald-400 font-bold">DN900 (900 mm)</span>
+            </div>
+            <input id="slider-pipe-dn" type="range" min="500" max="1400" step="100" value="900" oninput="onSandboxSliderInput()" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer" />
+          </div>
+          <div>
+            <div class="flex justify-between font-mono mb-0.5">
+              <span class="text-slate-300">4. Açık Deniz Güneş+Dalga Gücü:</span>
+              <span id="lbl-renew-mw" class="text-purple-300 font-bold">4.5 MW</span>
+            </div>
+            <input id="slider-renew-mw" type="range" min="1.0" max="12.0" step="0.5" value="4.5" oninput="onSandboxSliderInput()" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer" />
+          </div>
+        </div>
+
+        <div class="bg-ocean-950/90 rounded-xl p-2.5 border border-slate-800 space-y-1.5 font-mono text-[11px]">
+          <div class="flex justify-between"><span class="text-slate-400">Yakalanan Su Tuzluluğu:</span><span id="out-captured-salinity" class="text-emerald-400 font-bold">2,850 ppm</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Van 't Hoff Ozmotik Basınç:</span><span><strong id="out-osmotic-plume" class="text-biocyan">2.41 bar</strong> <span class="text-slate-500">(Deniz: 33.3 bar)</span></span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Boru Sürtünme Kaybı (ΔP):</span><span id="out-pipe-friction" class="text-amber-300 font-bold">0.14 bar (2.02 m/s)</span></div>
+          <div class="flex justify-between pt-1 border-t border-slate-800"><span class="text-slate-300 font-bold">Enerji Tüketimi (SEC):</span><span><strong id="out-sec-aquavein" class="text-emerald-400">0.69 kWh/m³</strong> <span id="out-sec-savings" class="text-emerald-300 text-[10px]">(-%82)</span></span></div>
+        </div>
+      </div>
+
+      <div class="scada-panel rounded-2xl p-3.5 flex flex-col gap-2.5 flex-1">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-sack-dollar text-amber-400 text-sm"></i>
+            <h2 class="font-display font-bold text-xs uppercase tracking-wider text-white">4. Ülke Ekonomisi & İklime Katkı</h2>
+          </div>
+          <span id="out-roi-badge" class="text-[10px] font-mono text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/30 font-bold">ROI: 1.4 Yıl</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="bg-ocean-950/90 p-2.5 rounded-xl border border-emerald-500/30">
+            <div class="text-[10px] font-mono text-slate-400">Günlük Tatlı Su Üretimi</div>
+            <div id="val-daily-m3" class="text-sm font-mono font-extrabold text-emerald-400 mt-0.5">104,525 m³/gün</div>
+            <div id="val-annual-hm3" class="text-[10px] font-mono text-slate-400">Yıllık: 38.15 hm³/yıl</div>
+          </div>
+          <div class="bg-ocean-950/90 p-2.5 rounded-xl border border-amber-500/30">
+            <div class="text-[10px] font-mono text-slate-400">Yıllık Ekonomik Katkı</div>
+            <div id="val-econ-usd" class="text-sm font-mono font-extrabold text-amber-400 mt-0.5">$66.4M / yıl</div>
+            <div id="val-econ-try" class="text-[10px] font-mono text-amber-200/90">≈ ₺2.39 Milyar / yıl</div>
+          </div>
+        </div>
+
+        <div class="bg-ocean-950/80 rounded-xl p-2.5 border border-slate-800 space-y-1.5 text-[11px] font-mono mt-auto">
+          <div class="flex justify-between"><span class="text-slate-400">🌱 Sulanan Kıyı Tarım Alanı:</span><span id="val-irrigated-ha" class="text-emerald-400 font-bold">8,478 Hektar</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">🏙️ İçme Suyu Nüfus Karşılığı:</span><span id="val-pop-served" class="text-biocyan font-bold">696,833 Kişi</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">🌍 Engellenen CO₂ Emisyonu:</span><span id="val-co2-saved" class="text-purple-300 font-bold">50,636 ton/yıl</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BOTTOM ROW: 3 SCIENTIFIC & MACROECONOMIC CHARTS -->
+    <section class="lg:col-span-12 grid grid-cols-1 lg:grid-cols-3 gap-3">
+      <div class="scada-panel rounded-2xl p-3.5 flex flex-col">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <h3 class="font-display font-bold text-xs uppercase text-white">GRAFİK 1: SAR Geri Saçılım (σ⁰ dB) & TIRS Termal Kesit</h3>
+            <p class="text-[10px] text-slate-400">Tatlı su çıkış merkezinde (-600m..+600m) Bragg dalga sönümlemesi</p>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">Sentinel-1 + Landsat-9</span>
+        </div>
+        <div class="relative h-44 w-full bg-ocean-950/90 rounded-xl border border-slate-800/90 p-2">
+          <canvas id="canvasSarGraph" class="w-full h-full block"></canvas>
+        </div>
+      </div>
+
+      <div class="scada-panel rounded-2xl p-3.5 flex flex-col">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <h3 class="font-display font-bold text-xs uppercase text-white">GRAFİK 2: Van 't Hoff Ozmotik Basınç (Bar) & Enerji (kWh/m³)</h3>
+            <p class="text-[10px] text-slate-400">Klasik Deniz Suyu Arıtımı (SWRO) vs. AquaVein Tatlı Su Çıkarma</p>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">-%82 Enerji Tasarrufu</span>
+        </div>
+        <div class="relative h-44 w-full bg-ocean-950/90 rounded-xl border border-slate-800/90 p-2">
+          <canvas id="canvasCtdGraph" class="w-full h-full block"></canvas>
+        </div>
+      </div>
+
+      <div class="scada-panel rounded-2xl p-3.5 flex flex-col">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <h3 class="font-display font-bold text-xs uppercase text-white">GRAFİK 3: 2026–2035 Ülke Ekonomisine Kümülatif Katkı ($M)</h3>
+            <p class="text-[10px] text-slate-400">Tarımsal sulama geliri, su arzı ve enerji tasarrufu büyümesi</p>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/15 text-biocyan border border-cyan-500/30">10 Yıllık Projeksiyon</span>
+        </div>
+        <div class="relative h-44 w-full bg-ocean-950/90 rounded-xl border border-slate-800/90 p-2">
+          <canvas id="canvasEconGraph" class="w-full h-full block"></canvas>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL 1: 7-SLIDE NASA PRESENTATION -->
+  <div id="presentation-modal" class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-md flex items-center justify-center p-3">
+    <div class="scada-panel rounded-2xl max-w-5xl w-full border-2 border-biocyan/60 overflow-hidden flex flex-col">
+      <div class="flex flex-wrap items-center justify-between gap-2 px-5 py-3 bg-ocean-900 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <span class="px-2.5 py-1 rounded bg-biocyan text-ocean-950 font-mono text-xs font-extrabold" id="slide-counter-badge">SLAYT 1 / 7</span>
+          <h3 class="font-display font-bold text-sm sm:text-base text-white">NASA Space Apps • 7 Sayfalık Jüri Sunumu</h3>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="narrateCurrentSlide()" class="px-3 py-1.5 rounded-lg bg-amber-400 text-ocean-950 font-mono text-xs font-extrabold">🔊 Bu Slaytı Seslendir</button>
+          <button onclick="downloadPresentationPDF()" class="px-3 py-1.5 rounded-lg bg-rose-600 text-white font-mono text-xs font-extrabold">📄 PDF İndir</button>
+          <button onclick="closePresentationModal()" class="text-slate-400 hover:text-white text-lg px-2">✕</button>
+        </div>
+      </div>
+      <div id="slide-body-container" class="p-5 bg-ocean-950"></div>
+      <div class="flex items-center justify-between px-5 py-3 bg-ocean-900 border-t border-slate-800">
+        <button onclick="changeSlide(-1)" class="px-4 py-1.5 rounded-xl bg-slate-800 text-slate-200 font-mono text-xs font-bold">← Önceki Slayt</button>
+        <button onclick="changeSlide(1)" class="px-4 py-1.5 rounded-xl bg-biocyan text-ocean-950 font-mono text-xs font-extrabold">Sonraki Slayt →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: GITHUB & DRIVE -->
+  <div id="sprint-modal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="scada-panel rounded-2xl max-w-3xl w-full p-5 border border-emerald-500/40 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="font-display font-bold text-lg text-white">GitHub (`sprint-reports`) & Google Drive Teslim Paketi</h3>
+        <button onclick="closeSprintModal()" class="text-slate-400 hover:text-white text-xl px-2">✕</button>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono text-xs">
+        <button onclick="downloadSprintReportFile(1)" class="p-2.5 rounded-xl bg-ocean-900 hover:bg-biocyan hover:text-ocean-950 font-bold">⬇️ Sprint-1.md</button>
+        <button onclick="downloadSprintReportFile(2)" class="p-2.5 rounded-xl bg-ocean-900 hover:bg-biocyan hover:text-ocean-950 font-bold">⬇️ Sprint-2.md</button>
+        <button onclick="downloadSprintReportFile(3)" class="p-2.5 rounded-xl bg-ocean-900 hover:bg-biocyan hover:text-ocean-950 font-bold">⬇️ Sprint-3.md</button>
+        <button onclick="downloadSprintReportFile(4)" class="p-2.5 rounded-xl bg-ocean-900 hover:bg-biocyan hover:text-ocean-950 font-bold">⬇️ Sprint-4.md</button>
+        <button onclick="downloadFullDocumentationMarkdown()" class="p-2.5 rounded-xl bg-amber-500/20 text-amber-300 font-bold">⬇️ README.md</button>
+        <button onclick="downloadCurrentSourceCodeFile()" class="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-300 font-bold">⬇️ index.html</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: BILL OF MATERIALS (BoM) -->
+  <div id="bom-modal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="scada-panel rounded-2xl max-w-3xl w-full p-5 border border-amber-400/50 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 id="bom-modal-title" class="font-display font-bold text-lg text-white">Mersin – Ovacık Kurulum Planı</h3>
+        <button onclick="closeBomReportModal()" class="text-slate-400 hover:text-white text-xl px-2">✕</button>
+      </div>
+      <div id="bom-modal-body" class="space-y-3 text-xs"></div>
+    </div>
+  </div>
+
+  <script>
+    const SGD_HOTSPOTS = [
+      { id: 'mersin-ovacik', regime: 'sea', regimeBadge: '🌊 KARSTİK DENİZ (AKDENİZ)', name: 'Mersin – Ovacık Denizaltı Karst Kaynakları', shortName: 'Mersin Ovacık (Akdeniz)', coords: '36.1428°N, 33.6842°E', lat: 36.1428, lon: 33.6842, depth: 38.5, offshoreDistKm: 1.85, pipelineLengthKm: 2.4, citation: 'DSİ & ODTÜ Deniz Bilimleri Enstitüsü; Bakalowicz (2015)', sceneId: 'S1A_IW_GRDH_20260819', sigmaAmbient: -12.4, sigmaPlume: -20.2, deltaSigma: -7.8, sstAmbient: 27.6, sstPlume: 23.8, deltaSST: -3.8, ambientSalinity: 38900, plumeSalinity: 2850, csemResistivityOhmM: 85, flowM3s: 1.65, optimalPumpPct: 78, optimalDomeDiamM: 14, optimalPipeDnMm: 900, optimalRenewMw: 4.5, fesi: 96.4 },
+      { id: 'antalya-olbia', regime: 'sea', regimeBadge: '🌊 KARSTİK DENİZ (AKDENİZ)', name: 'Antalya – Olbia / Boğaçayı Traverten Deşarjı', shortName: 'Antalya Olbia (Akdeniz)', coords: '36.8514°N, 30.6290°E', lat: 36.8514, lon: 30.6290, depth: 32.0, offshoreDistKm: 1.40, pipelineLengthKm: 1.9, citation: 'Bayari et al. (2011) Western Taurus Karst; Sentinel-1 C-SAR', sceneId: 'S1A_IW_GRDH_20260821', sigmaAmbient: -12.8, sigmaPlume: -20.1, deltaSigma: -7.3, sstAmbient: 28.2, sstPlume: 24.6, deltaSST: -3.6, ambientSalinity: 38800, plumeSalinity: 3100, csemResistivityOhmM: 76, flowM3s: 2.15, optimalPumpPct: 80, optimalDomeDiamM: 16, optimalPipeDnMm: 1000, optimalRenewMw: 5.5, fesi: 94.8 },
+      { id: 'atlantic-nantucket', regime: 'ocean', regimeBadge: '🌍 OKYANUS AKİFERİ (ATLANTİK)', name: 'Atlantik Okyanusu – Nantucket Kıta Sahanlığı Akiferi', shortName: 'Kuzey Atlantik (ABD)', coords: '39.8240°N, -72.6410°W', lat: 39.8240, lon: -72.6410, depth: 54.0, offshoreDistKm: 18.5, pipelineLengthKm: 22.0, citation: 'Gustafson, Key & Evans (2019) Scientific Reports', sceneId: 'NISAR_L_SAR_20260714', sigmaAmbient: -11.5, sigmaPlume: -18.2, deltaSigma: -6.7, sstAmbient: 21.4, sstPlume: 18.2, deltaSST: -3.2, ambientSalinity: 35200, plumeSalinity: 1850, csemResistivityOhmM: 120, flowM3s: 3.40, optimalPumpPct: 82, optimalDomeDiamM: 18, optimalPipeDnMm: 1200, optimalRenewMw: 8.0, fesi: 95.8 },
+      { id: 'pacific-hawaii', regime: 'ocean', regimeBadge: '🌍 OKYANUS BAZALT (PASİFİK)', name: 'Pasifik Okyanusu – Hawaii Kīholo Bazalt Deşarjı', shortName: 'Pasifik Hawaii (Kīholo)', coords: '19.8562°N, -155.9320°W', lat: 19.8562, lon: -155.9320, depth: 27.5, offshoreDistKm: 1.25, pipelineLengthKm: 1.7, citation: 'Attias et al. (2020) Science Advances (Marine CSEM)', sceneId: 'S1B_IW_GRDH_20260729', sigmaAmbient: -11.8, sigmaPlume: -19.2, deltaSigma: -7.4, sstAmbient: 26.8, sstPlume: 22.5, deltaSST: -4.3, ambientSalinity: 35100, plumeSalinity: 2300, csemResistivityOhmM: 94, flowM3s: 1.48, optimalPumpPct: 78, optimalDomeDiamM: 13, optimalPipeDnMm: 800, optimalRenewMw: 4.0, fesi: 93.6 },
+      { id: 'italy-taranto', regime: 'sea', regimeBadge: '🌊 UYGULANMIŞ REFERANS (İTALYA)', name: 'İtalya Taranto – Mar Piccolo Citrello Kaynağı', shortName: 'Taranto Citrello (İtalya)', coords: '40.4892°N, 17.2654°E', lat: 40.4892, lon: 17.2654, depth: 22.0, offshoreDistKm: 0.95, pipelineLengthKm: 1.4, citation: 'Stefanon (1972) Submarine Springs of Taranto', sceneId: 'S1A_IW_GRDH_20260718', sigmaAmbient: -13.0, sigmaPlume: -20.5, deltaSigma: -7.5, sstAmbient: 26.4, sstPlume: 22.7, deltaSST: -3.7, ambientSalinity: 38200, plumeSalinity: 2650, csemResistivityOhmM: 88, flowM3s: 1.25, optimalPumpPct: 76, optimalDomeDiamM: 12, optimalPipeDnMm: 800, optimalRenewMw: 3.5, fesi: 95.1 },
+      { id: 'lebanon-chekka', regime: 'sea', regimeBadge: '🌊 KARSTİK DENİZ (DOĞU AKDENİZ)', name: 'Lübnan – Chekka Denizaltı Karst Sistemi', shortName: 'Lübnan Chekka (Akdeniz)', coords: '34.3180°N, 35.7120°E', lat: 34.3180, lon: 35.7120, depth: 45.0, offshoreDistKm: 2.20, pipelineLengthKm: 2.9, citation: 'Bakalowicz et al. (2008) Chekka Submarine Springs', sceneId: 'S1A_IW_GRDH_20260812', sigmaAmbient: -12.1, sigmaPlume: -20.5, deltaSigma: -8.4, sstAmbient: 28.4, sstPlume: 24.1, deltaSST: -4.3, ambientSalinity: 39100, plumeSalinity: 2600, csemResistivityOhmM: 92, flowM3s: 2.50, optimalPumpPct: 80, optimalDomeDiamM: 16, optimalPipeDnMm: 1100, optimalRenewMw: 6.0, fesi: 97.2 },
+      { id: 'pacific-pearlriver', regime: 'ocean', regimeBadge: '🌍 OKYANUS AKİFERİ (PASİFİK)', name: 'Pasifik – Pearl River Kıta Sahanlığı Akiferi', shortName: 'Pasifik Pearl Sahanlığı', coords: '21.4500°N, 114.8200°E', lat: 21.4500, lon: 114.8200, depth: 48.0, offshoreDistKm: 14.2, pipelineLengthKm: 17.5, citation: 'Post et al. (2013) Nature Offshore Groundwater Reserves', sceneId: 'NISAR_L_SAR_20260802', sigmaAmbient: -12.2, sigmaPlume: -18.8, deltaSigma: -6.6, sstAmbient: 28.5, sstPlume: 25.1, deltaSST: -3.4, ambientSalinity: 34500, plumeSalinity: 2100, csemResistivityOhmM: 105, flowM3s: 2.85, optimalPumpPct: 80, optimalDomeDiamM: 16, optimalPipeDnMm: 1100, optimalRenewMw: 6.5, fesi: 92.8 },
+      { id: 'indian-perth', regime: 'ocean', regimeBadge: '🌍 OKYANUS AKİFERİ (HİNT)', name: 'Hint Okyanusu – Perth Leederville Akiferi', shortName: 'Hint Okyanusu (Perth)', coords: '-32.0250°S, 115.3800°E', lat: -32.0250, lon: 115.3800, depth: 41.0, offshoreDistKm: 9.8, pipelineLengthKm: 12.4, citation: 'CSIRO Marine Research; Micallef et al. (2021)', sceneId: 'S1A_IW_GRDH_20260809', sigmaAmbient: -11.9, sigmaPlume: -18.9, deltaSigma: -7.0, sstAmbient: 20.6, sstPlume: 17.4, deltaSST: -3.2, ambientSalinity: 35600, plumeSalinity: 2450, csemResistivityOhmM: 98, flowM3s: 1.95, optimalPumpPct: 78, optimalDomeDiamM: 15, optimalPipeDnMm: 1000, optimalRenewMw: 5.0, fesi: 91.9 }
+    ];
+
+    let selectedSpot = SGD_HOTSPOTS[0];
+    let activeRegimeFilter = 'all';
+    let currentSimulationStage = 1;
+    let isSandboxMode = false;
+    let isFull3DMode = false;
+    let active3DViewMode = 'globe';
+    let simMetrics = {};
+
+    function calculateEngineeringMetrics(spot, pumpPct, domeDiamM, pipeDnMm, renewMw) {
+      const T_kelvin = 273.15 + spot.sstPlume;
+      const R_const = 0.08314;
+      let intrusionRatio = pumpPct > 85 ? Math.min(0.65, Math.pow((pumpPct - 85) / 30, 1.35) * 0.55) : 0;
+      const domeCoverageBonus = Math.min(1.08, Math.max(0.85, domeDiamM / spot.optimalDomeDiamM));
+      const effectiveSalinityPpm = Math.round((spot.plumeSalinity / domeCoverageBonus) * (1 - intrusionRatio) + spot.ambientSalinity * intrusionRatio);
+
+      const osmoticSeaBar = 2.0 * ((spot.ambientSalinity / 1000) / 58.44) * R_const * (273.15 + spot.sstAmbient);
+      const osmoticPlumeBar = 2.0 * ((effectiveSalinityPpm / 1000) / 58.44) * R_const * T_kelvin;
+
+      const capturedFlowM3s = spot.flowM3s * (pumpPct / 100) * Math.min(1.05, domeDiamM / spot.optimalDomeDiamM);
+      const rawDailyM3 = capturedFlowM3s * 86400;
+
+      const pipeDiamM = pipeDnMm / 1000;
+      const pipeVelocityMs = capturedFlowM3s / (Math.PI * Math.pow(pipeDiamM / 2, 2));
+      const headLossM = 0.0135 * ((spot.pipelineLengthKm * 1000) / pipeDiamM) * (Math.pow(pipeVelocityMs, 2) / (2 * 9.81));
+      const pipeFrictionBar = headLossM * 0.0980665;
+
+      const totalPumpPressureBar = osmoticPlumeBar * 1.18 + pipeFrictionBar;
+      const secStandard = 3.85;
+      const secAquaVein = Math.max(0.45, Math.min(3.75, (totalPumpPressureBar / osmoticSeaBar) * 3.15 + 0.35));
+      const energySavingsPct = Math.max(5, Math.round((1 - secAquaVein / secStandard) * 100));
+
+      const maxPowerSupportedDailyM3 = (renewMw * 1000 * 19.5) / secAquaVein;
+      const netDailyFreshwaterM3 = Math.round(Math.min(rawDailyM3, maxPowerSupportedDailyM3) * 0.94);
+      const annualExtractedHm3 = (netDailyFreshwaterM3 * 365) / 1e6;
+
+      const irrigatedHectares = Math.round((annualExtractedHm3 * 1e6) / 4500);
+      const populationServed = Math.round(netDailyFreshwaterM3 / 0.15);
+      const econTotalUSD = (annualExtractedHm3 * 0.72 + (irrigatedHectares * 2600) / 1e6 + annualExtractedHm3 * (secStandard - secAquaVein) * 0.14).toFixed(1);
+      const co2SavedTons = Math.round(annualExtractedHm3 * 1e6 * (secStandard - secAquaVein) * 0.42 / 1000);
+      const capexMillionUSD = ((spot.regime === 'ocean' ? 8.5 + domeDiamM * 0.45 : 3.2 + domeDiamM * 0.22) + spot.pipelineLengthKm * (pipeDnMm / 900) * 1.15 + renewMw * 1.45).toFixed(1);
+      const paybackYears = (Number(capexMillionUSD) / Math.max(1, Number(econTotalUSD))).toFixed(1);
+
+      return {
+        pumpPct, domeDiamM, pipeDnMm, renewMw,
+        intrusionAlert: pumpPct > 85,
+        actualSalinityPpm: effectiveSalinityPpm,
+        osmoticSeaBar: osmoticSeaBar.toFixed(1),
+        osmoticPlumeBar: osmoticPlumeBar.toFixed(2),
+        pipeVelocityMs: pipeVelocityMs.toFixed(2),
+        pipeFrictionBar: pipeFrictionBar.toFixed(2),
+        secStandard: secStandard.toFixed(2),
+        secAquaVein: secAquaVein.toFixed(2),
+        energySavingsPct,
+        dailyExtractedM3: netDailyFreshwaterM3,
+        annualExtractedHm3: annualExtractedHm3.toFixed(2),
+        irrigatedHectares, populationServed, econTotalUSD, co2SavedTons, capexMillionUSD, paybackYears
+      };
+    }
+
+    let scene, camera, renderer, controls;
+    let spaceGlobeGroup, earthPivotGroup, earthTargetReticle, earthHotspotPins = [];
+    let yellowSatelliteGroup, yellowRadarBeamCone, yellowRadarRings = [], backgroundOrbitSats = [];
+    let underwaterSystemGroup, plumeParticles, seaDomeGroup, oceanWellsGroup, riserPipeFlowRings = [];
+    const EARTH_RADIUS = 17.5;
+    let desiredEarthRotY = 0, desiredEarthRotX = 0;
+    let cameraTargetPos = new THREE.Vector3(0, 14, 58), controlsTargetLook = new THREE.Vector3(0, 0, 0);
+    let isCameraLerping = false, diveTimeouts = [];
+
+    function clearAllDiveTimeouts() { diveTimeouts.forEach(clearTimeout); diveTimeouts = []; }
+
+    function latLonToSphereXYZ(lat, lon, radius) {
+      const phi = ((lon + 180) / 360) * Math.PI * 2;
+      const theta = ((90 - lat) / 180) * Math.PI;
+      return new THREE.Vector3(-radius * Math.cos(phi) * Math.sin(theta), radius * Math.cos(theta), radius * Math.sin(phi) * Math.sin(theta));
+    }
+
+    function createAccurateEarthTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 2048; canvas.height = 1024;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createLinearGradient(0, 0, 0, 1024);
+      grad.addColorStop(0, '#04142c'); grad.addColorStop(0.5, '#072a52'); grad.addColorStop(1, '#04142c');
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, 2048, 1024);
+
+      ctx.strokeStyle = 'rgba(0, 242, 254, 0.14)';
+      for (let lon = -180; lon <= 180; lon += 30) {
+        const px = ((lon + 180) / 360) * 2048;
+        ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, 1024); ctx.stroke();
+      }
+      for (let lat = -60; lat <= 60; lat += 30) {
+        const py = ((90 - lat) / 180) * 1024;
+        ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(2048, py); ctx.stroke();
+      }
+
+      function poly(pts, fill, stroke) {
+        ctx.beginPath();
+        pts.forEach(([lon, lat], i) => {
+          const x = ((lon + 180) / 360) * 2048, y = ((90 - lat) / 180) * 1024;
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = stroke; ctx.lineWidth = 2.5; ctx.stroke();
+      }
+      poly([[-165,68],[-130,70],[-80,65],[-60,48],[-74,40],[-81,25],[-97,18],[-122,37]], '#184e3b', '#34d399');
+      poly([[-80,10],[-60,8],[-35,-6],[-42,-23],[-68,-54],[-75,-45],[-72,-18]], '#184e3b', '#34d399');
+      poly([[-9,37],[-2,48],[10,58],[28,70],[45,65],[40,46],[28,41],[23,38],[17,40],[13,45]], '#184e3b', '#34d399');
+      poly([[26,41.5],[44,41.5],[44,37],[36.2,36.2],[33.5,36.1],[30.4,36.6],[27,37],[26,40]], '#226b4e', '#6ee7b7');
+      poly([[-17,15],[-6,35],[10,37],[32,31],[43,30],[56,23],[50,12],[34,-25],[18,-34],[8,4]], '#184e3b', '#34d399');
+      poly([[44,42],[60,68],[135,65],[142,48],[122,32],[114,21.5],[104,1],[78,8],[52,28]], '#184e3b', '#34d399');
+      poly([[114,-22],[132,-12],[152,-25],[147,-38],[115,-34]], '#184e3b', '#34d399');
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    function initThreeJS() {
+      const container = document.getElementById('webgl-container');
+      const w = container.clientWidth || 800, h = container.clientHeight || 600;
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x020814);
+      camera = new THREE.PerspectiveCamera(42, w / h, 0.5, 1200);
+      camera.position.set(0, 10, 56);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      renderer.setSize(w, h);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+
+      scene.add(new THREE.AmbientLight(0xdbeafe, 0.95));
+      const sun = new THREE.DirectionalLight(0xffffff, 1.25);
+      sun.position.set(55, 65, 75);
+      scene.add(sun);
+
+      spaceGlobeGroup = new THREE.Group();
+      scene.add(spaceGlobeGroup);
+      earthPivotGroup = new THREE.Group();
+      spaceGlobeGroup.add(earthPivotGroup);
+
+      earthPivotGroup.add(new THREE.Mesh(
+        new THREE.SphereGeometry(EARTH_RADIUS, 64, 64),
+        new THREE.MeshPhongMaterial({ map: createAccurateEarthTexture(), shininess: 18 })
+      ));
+
+      SGD_HOTSPOTS.forEach((sp) => {
+        const pin = new THREE.Mesh(new THREE.SphereGeometry(0.42, 16, 16), new THREE.MeshBasicMaterial({ color: sp.regime === 'ocean' ? 0xc084fc : 0x00f2fe }));
+        pin.position.copy(latLonToSphereXYZ(sp.lat, sp.lon, EARTH_RADIUS + 0.25));
+        pin.userData = { spotId: sp.id };
+        earthPivotGroup.add(pin);
+        earthHotspotPins.push(pin);
+      });
+
+      earthTargetReticle = new THREE.Group();
+      earthTargetReticle.add(
+        new THREE.Mesh(new THREE.SphereGeometry(0.65, 20, 20), new THREE.MeshBasicMaterial({ color: 0xfacc15 })),
+        new THREE.Mesh(new THREE.RingGeometry(1.0, 1.45, 32), new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide }))
+      );
+      earthPivotGroup.add(earthTargetReticle);
+
+      yellowSatelliteGroup = new THREE.Group();
+      yellowSatelliteGroup.add(
+        new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.5, 1.5), new THREE.MeshPhongMaterial({ color: 0xfacc15, emissive: 0xb45309 })),
+        new THREE.Mesh(new THREE.BoxGeometry(6.8, 0.14, 1.5), new THREE.MeshPhongMaterial({ color: 0xfef08a }))
+      );
+      spaceGlobeGroup.add(yellowSatelliteGroup);
+
+      yellowRadarBeamCone = new THREE.Mesh(
+        new THREE.ConeGeometry(2.6, 1.0, 28, 1, true),
+        new THREE.MeshBasicMaterial({ color: 0xfacc15, transparent: true, opacity: 0.3, side: THREE.DoubleSide })
+      );
+      spaceGlobeGroup.add(yellowRadarBeamCone);
+
+      for (let i = 0; i < 4; i++) {
+        const rMesh = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.85, 28), new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xfacc15 : 0x00f2fe, side: THREE.DoubleSide }));
+        spaceGlobeGroup.add(rMesh);
+        yellowRadarRings.push(rMesh);
+      }
+
+      underwaterSystemGroup = new THREE.Group();
+      underwaterSystemGroup.visible = false;
+      scene.add(underwaterSystemGroup);
+      buildUnderwaterExtractionScene();
+      orientEarthToSelectedSpot();
+
+      window.addEventListener('resize', () => {
+        const nw = container.clientWidth || 800, nh = container.clientHeight || 600;
+        camera.aspect = nw / nh;
+        camera.updateProjectionMatrix();
+        renderer.setSize(nw, nh);
+        renderAllScientificCharts();
+      });
+
+      animateThreeJS();
+    }
+
+    function buildUnderwaterExtractionScene() {
+      const waterBox = new THREE.Mesh(new THREE.BoxGeometry(84, 26, 48), new THREE.MeshPhongMaterial({ color: 0x0284c7, transparent: true, opacity: 0.16, depthWrite: false }));
+      waterBox.position.set(0, -13, 0);
+      underwaterSystemGroup.add(waterBox);
+
+      const bedrock = new THREE.Mesh(new THREE.BoxGeometry(84, 12, 48), new THREE.MeshPhongMaterial({ color: 0x1e293b, transparent: true, opacity: 0.82 }));
+      bedrock.position.set(0, -32, 0);
+      underwaterSystemGroup.add(bedrock);
+
+      const pGeo = new THREE.BufferGeometry();
+      const pPos = new Float32Array(360 * 3);
+      for (let i = 0; i < 360; i++) {
+        const f = Math.random(), r = (0.8 + f * 3.5) * Math.random(), a = Math.random() * Math.PI * 2;
+        pPos[i * 3] = Math.cos(a) * r; pPos[i * 3 + 1] = -26 + f * 26; pPos[i * 3 + 2] = Math.sin(a) * r;
+      }
+      pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+      plumeParticles = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0x38bdf8, size: 0.65 }));
+      underwaterSystemGroup.add(plumeParticles);
+
+      seaDomeGroup = new THREE.Group();
+      const domeShell = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 6.2, 4.6, 8), new THREE.MeshPhongMaterial({ color: 0x00f2fe, transparent: true, opacity: 0.88 }));
+      domeShell.position.set(0, -23.7, 0);
+      seaDomeGroup.add(domeShell);
+      underwaterSystemGroup.add(seaDomeGroup);
+
+      oceanWellsGroup = new THREE.Group();
+      const manifold = new THREE.Mesh(new THREE.BoxGeometry(10, 2.2, 7), new THREE.MeshPhongMaterial({ color: 0xc084fc }));
+      manifold.position.set(0, -24.8, 0);
+      oceanWellsGroup.add(manifold);
+      underwaterSystemGroup.add(oceanWellsGroup);
+
+      const riser = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.65, 23, 20), new THREE.MeshPhongMaterial({ color: 0x38bdf8 }));
+      riser.position.set(0, -11.5, 0);
+      underwaterSystemGroup.add(riser);
+
+      for (let i = 0; i < 5; i++) {
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.16, 12, 24), new THREE.MeshBasicMaterial({ color: 0x34d399 }));
+        ring.rotation.x = Math.PI / 2;
+        ring.position.set(0, -22 + i * 4.5, 0);
+        underwaterSystemGroup.add(ring);
+        riserPipeFlowRings.push(ring);
+      }
+
+      const roPlat = new THREE.Mesh(new THREE.BoxGeometry(8.5, 2.2, 6.5), new THREE.MeshPhongMaterial({ color: 0x0f172a, emissive: 0x0ea5e9, emissiveIntensity: 0.25 }));
+      roPlat.position.set(0, 1.2, 0);
+      underwaterSystemGroup.add(roPlat);
+    }
+
+    function orientEarthToSelectedSpot() {
+      if (!earthPivotGroup || !earthTargetReticle) return;
+      const pos = latLonToSphereXYZ(selectedSpot.lat, selectedSpot.lon, EARTH_RADIUS + 0.32);
+      earthTargetReticle.position.copy(pos);
+      earthTargetReticle.lookAt(pos.clone().multiplyScalar(2));
+      desiredEarthRotY = ((selectedSpot.lon + 180) / 360) * Math.PI * 2 - Math.PI / 2;
+      desiredEarthRotX = (selectedSpot.lat / 180) * Math.PI * 0.65;
+    }
+
+    function animateThreeJS() {
+      requestAnimationFrame(animateThreeJS);
+      const t = performance.now() * 0.001;
+      if (active3DViewMode === 'globe' && spaceGlobeGroup) {
+        earthPivotGroup.rotation.y += (desiredEarthRotY - earthPivotGroup.rotation.y) * 0.06;
+        earthPivotGroup.rotation.x += (desiredEarthRotX - earthPivotGroup.rotation.x) * 0.06;
+        const worldTarget = new THREE.Vector3();
+        earthTargetReticle.getWorldPosition(worldTarget);
+        const satPos = worldTarget.clone().normalize().multiplyScalar(EARTH_RADIUS + 8.2);
+        yellowSatelliteGroup.position.copy(satPos);
+        yellowSatelliteGroup.lookAt(worldTarget);
+
+        const mid = new THREE.Vector3().addVectors(satPos, worldTarget).multiplyScalar(0.5);
+        yellowRadarBeamCone.position.copy(mid);
+        yellowRadarBeamCone.scale.set(1, satPos.distanceTo(worldTarget), 1);
+        yellowRadarBeamCone.lookAt(worldTarget);
+        yellowRadarBeamCone.rotateX(Math.PI / 2);
+
+        yellowRadarRings.forEach((ring, i) => {
+          const frac = (t * 0.85 + i * 0.25) % 1;
+          ring.position.lerpVectors(satPos, worldTarget, frac);
+          ring.lookAt(worldTarget);
+        });
+      } else if (active3DViewMode === 'underwater') {
+        if (plumeParticles) {
+          const arr = plumeParticles.geometry.attributes.position.array;
+          for (let i = 0; i < arr.length; i += 3) {
+            arr[i + 1] += 0.14;
+            if (arr[i + 1] > 0) arr[i + 1] = -26;
+          }
+          plumeParticles.geometry.attributes.position.needsUpdate = true;
+        }
+        riserPipeFlowRings.forEach((r) => { r.position.y += 0.18; if (r.position.y > 0) r.position.y = -22; });
+      }
+      if (isCameraLerping) {
+        camera.position.lerp(cameraTargetPos, 0.07);
+        controls.target.lerp(controlsTargetLook, 0.07);
+        if (camera.position.distanceTo(cameraTargetPos) < 0.35) isCameraLerping = false;
+      }
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    function switchToSpaceGlobeView() {
+      clearAllDiveTimeouts();
+      active3DViewMode = 'globe';
+      spaceGlobeGroup.visible = true;
+      underwaterSystemGroup.visible = false;
+      document.getElementById('subsea-cam-toolbar').classList.add('hidden');
+      cameraTargetPos.set(0, 10, 56); controlsTargetLook.set(0, 0, 0); isCameraLerping = true;
+    }
+
+    function switchToUnderwaterSystemView() {
+      clearAllDiveTimeouts();
+      active3DViewMode = 'underwater';
+      spaceGlobeGroup.visible = false;
+      underwaterSystemGroup.visible = true;
+      seaDomeGroup.visible = selectedSpot.regime === 'sea';
+      oceanWellsGroup.visible = selectedSpot.regime === 'ocean';
+      document.getElementById('subsea-cam-toolbar').classList.remove('hidden');
+      cameraTargetPos.set(0, -6, 52); controlsTargetLook.set(4, -12, 0); isCameraLerping = true;
+    }
+
+    function playYellowSatelliteDiscoveryAndDive() {
+      switchToSpaceGlobeView();
+      cameraTargetPos.set(0, 5, 34); isCameraLerping = true;
+      diveTimeouts.push(setTimeout(() => switchToUnderwaterSystemView(), 2000));
+    }
+
+    function setUnderwaterCameraAngle(angle) {
+      switchToUnderwaterSystemView();
+      if (angle === 'overview') { cameraTargetPos.set(0, -6, 52); controlsTargetLook.set(4, -12, 0); }
+      else if (angle === 'dome') { cameraTargetPos.set(0, -19, 22); controlsTargetLook.set(0, -24, 0); }
+      else if (angle === 'platform') { cameraTargetPos.set(0, 6, 24); controlsTargetLook.set(0, 0, 0); }
+      else if (angle === 'coast') { cameraTargetPos.set(24, 6, 28); controlsTargetLook.set(26, -1, 0); }
+      isCameraLerping = true;
+    }
+
+    function toggleFull3DMode() {
+      const panel = document.getElementById('center-3d-panel');
+      isFull3DMode = !isFull3DMode;
+      panel.classList.toggle('lg:col-span-12', isFull3DMode);
+      panel.classList.toggle('lg:col-span-6', !isFull3DMode);
+      document.getElementById('left-telemetry-panel').classList.toggle('hidden', isFull3DMode);
+      document.getElementById('right-telemetry-panel').classList.toggle('hidden', isFull3DMode);
+      setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+    }
+
+    // 2D SCIENTIFIC & MACROECONOMIC CHARTS ENGINE
+    function prepareHiDPICanvas(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return null;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const width = Math.max(260, rect.width - 16), height = Math.max(130, rect.height - 16);
+      canvas.width = width * dpr; canvas.height = height * dpr;
+      canvas.style.width = width + 'px'; canvas.style.height = height + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+      return { ctx, width, height };
+    }
+
+    function drawSarAndThermalChart() {
+      const setup = prepareHiDPICanvas('canvasSarGraph');
+      if (!setup) return;
+      const { ctx, width, height } = setup;
+      const padL = 40, padR = 25, padT = 18, padB = 24;
+      const plotW = width - padL - padR, plotH = height - padT - padB;
+
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.15)';
+      for (let i = 0; i <= 4; i++) {
+        const y = padT + (plotH * i) / 4;
+        ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + plotW, y); ctx.stroke();
+      }
+
+      const steps = 60;
+      ctx.beginPath();
+      for (let i = 0; i <= steps; i++) {
+        const u = (i / steps) * 2 - 1;
+        const sigmaVal = selectedSpot.sigmaAmbient + selectedSpot.deltaSigma * Math.exp(-Math.pow(u * 2.8, 2));
+        const normY = (sigmaVal - (-22)) / 12;
+        const px = padL + (i / steps) * plotW, py = padT + plotH * (1 - Math.max(0, Math.min(1, normY)));
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.strokeStyle = '#facc15'; ctx.lineWidth = 2.5; ctx.stroke();
+
+      ctx.beginPath();
+      for (let i = 0; i <= steps; i++) {
+        const u = (i / steps) * 2 - 1;
+        const sstVal = selectedSpot.sstAmbient + selectedSpot.deltaSST * Math.exp(-Math.pow(u * 2.3, 2));
+        const normY = (sstVal - 15) / 16;
+        const px = padL + (i / steps) * plotW, py = padT + plotH * (1 - Math.max(0, Math.min(1, normY)));
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.strokeStyle = '#00f2fe'; ctx.lineWidth = 2.2; ctx.stroke();
+
+      ctx.fillStyle = '#facc15'; ctx.font = 'bold 10px "JetBrains Mono", monospace';
+      ctx.fillText(`SAR σ⁰: ${selectedSpot.sigmaPlume} dB (Δ ${selectedSpot.deltaSigma} dB)`, padL + 6, padT + 12);
+      ctx.fillStyle = '#00f2fe';
+      ctx.fillText(`TIRS SST: ${selectedSpot.sstPlume}°C (${selectedSpot.deltaSST}°C)`, padL + 6, padT + 25);
+    }
+
+    function drawOsmoticAndEnergyChart() {
+      const setup = prepareHiDPICanvas('canvasCtdGraph');
+      if (!setup) return;
+      const { ctx, width, height } = setup;
+      const padL = 32, padR = 16, padT = 22, padB = 26;
+      const plotW = width - padL - padR, plotH = height - padT - padB;
+      const bars = [
+        { label: 'Deniz (Bar)', val: Number(simMetrics.osmoticSeaBar), max: 36, color: '#ef4444', unit: 'bar' },
+        { label: 'AquaVein (Bar)', val: Number(simMetrics.osmoticPlumeBar), max: 36, color: '#00f2fe', unit: 'bar' },
+        { label: 'Klasik (kWh)', val: Number(simMetrics.secStandard), max: 4.5, color: '#f97316', unit: 'kWh' },
+        { label: 'AquaVein (kWh)', val: Number(simMetrics.secAquaVein), max: 4.5, color: '#10b981', unit: 'kWh' }
+      ];
+      const stepW = plotW / bars.length, barW = Math.min(50, stepW * 0.58);
+      bars.forEach((b, idx) => {
+        const bh = Math.min(1, Math.max(0.06, b.val / b.max)) * plotH;
+        const bx = padL + idx * stepW + (stepW - barW) / 2, by = padT + plotH - bh;
+        ctx.fillStyle = b.color;
+        ctx.fillRect(bx, by, barW, bh);
+        ctx.fillStyle = '#f8fafc'; ctx.font = 'bold 10px "JetBrains Mono", monospace'; ctx.textAlign = 'center';
+        ctx.fillText(`${b.val} ${b.unit}`, bx + barW / 2, by - 5);
+        ctx.fillStyle = '#94a3b8'; ctx.font = '9px "JetBrains Mono", monospace';
+        ctx.fillText(b.label, bx + barW / 2, height - 8);
+      });
+      ctx.textAlign = 'left';
+    }
+
+    function drawMacroEconomicChart() {
+      const setup = prepareHiDPICanvas('canvasEconGraph');
+      if (!setup) return;
+      const { ctx, width, height } = setup;
+      const padL = 40, padR = 18, padT = 20, padB = 26;
+      const plotW = width - padL - padR, plotH = height - padT - padB;
+      const annualVal = Number(simMetrics.econTotalUSD) || 66.4;
+      const years = [2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035];
+      const cumulative = years.map((_, i) => Number((annualVal * (i + 1) * (1 + i * 0.035)).toFixed(1)));
+      const maxVal = cumulative[cumulative.length - 1] * 1.1;
+
+      ctx.beginPath();
+      cumulative.forEach((v, i) => {
+        const px = padL + (i / (years.length - 1)) * plotW, py = padT + plotH * (1 - v / maxVal);
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      });
+      ctx.strokeStyle = '#34d399'; ctx.lineWidth = 2.5; ctx.stroke();
+
+      cumulative.forEach((v, i) => {
+        const px = padL + (i / (years.length - 1)) * plotW, py = padT + plotH * (1 - v / maxVal);
+        ctx.fillStyle = '#facc15'; ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI * 2); ctx.fill();
+        if (i === 0 || i === 4 || i === 9) {
+          ctx.fillStyle = '#e2e8f0'; ctx.font = 'bold 9px "JetBrains Mono", monospace';
+          ctx.fillText(`$${v}M`, px - 14, py - 6);
+        }
+      });
+    }
+
+    function renderAllScientificCharts() {
+      drawSarAndThermalChart();
+      drawOsmoticAndEnergyChart();
+      drawMacroEconomicChart();
+    }
+
+    function renderHotspotList() {
+      const container = document.getElementById('hotspot-list-container');
+      const filtered = SGD_HOTSPOTS.filter((sp) => activeRegimeFilter === 'all' || sp.regime === activeRegimeFilter);
+      container.innerHTML = filtered.map((sp) => `
+        <button onclick="selectHotspot('${sp.id}')" class="w-full text-left p-2 rounded-xl border transition-all flex items-center justify-between ${sp.id === selectedSpot.id ? 'bg-cyan-950/80 border-biocyan text-white' : 'bg-ocean-950/70 border-slate-800 text-slate-300'}">
+          <div>
+            <div class="font-mono text-[11px] font-bold">${sp.shortName}</div>
+            <div class="text-[10px] text-slate-400 font-mono">${sp.coords} • -${sp.depth}m</div>
+          </div>
+          <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">${sp.fesi}</span>
+        </button>
+      `).join('');
+    }
+
+    function filterRegime(regime) {
+      activeRegimeFilter = regime;
+      renderHotspotList();
+    }
+
+    function selectHotspot(spotId) {
+      const found = SGD_HOTSPOTS.find((s) => s.id === spotId);
+      if (!found) return;
+      selectedSpot = found;
+      renderHotspotList();
+      if (!isSandboxMode) {
+        document.getElementById('slider-pump-rate').value = selectedSpot.optimalPumpPct;
+        document.getElementById('slider-dome-diam').value = selectedSpot.optimalDomeDiamM;
+        document.getElementById('slider-pipe-dn').value = selectedSpot.optimalPipeDnMm;
+        document.getElementById('slider-renew-mw').value = selectedSpot.optimalRenewMw;
+      }
+      orientEarthToSelectedSpot();
+      updateAllTelemetryAndCharts();
+    }
+
+    function updateAllTelemetryAndCharts() {
+      const pumpPct = Number(document.getElementById('slider-pump-rate').value);
+      const domeDiam = Number(document.getElementById('slider-dome-diam').value);
+      const pipeDn = Number(document.getElementById('slider-pipe-dn').value);
+      const renewMw = Number(document.getElementById('slider-renew-mw').value);
+      simMetrics = calculateEngineeringMetrics(selectedSpot, pumpPct, domeDiam, pipeDn, renewMw);
+
+      document.getElementById('Readout-Regime-Badge').textContent = selectedSpot.regimeBadge;
+      document.getElementById('Readout-HydroType').textContent = selectedSpot.name;
+      document.getElementById('Readout-Citation').textContent = selectedSpot.citation;
+      document.getElementById('Readout-SceneID').textContent = selectedSpot.sceneId;
+      document.getElementById('Readout-OffshoreDist').textContent = `${selectedSpot.offshoreDistKm} km`;
+      document.getElementById('fesi-total-score').textContent = `${selectedSpot.fesi}/100`;
+      document.getElementById('val-sar-drop').textContent = `${selectedSpot.deltaSigma} dB`;
+      document.getElementById('val-sst-anom').textContent = `${selectedSpot.deltaSST} °C`;
+      document.getElementById('val-smap-psu').textContent = `${selectedSpot.plumeSalinity.toLocaleString()} ppm`;
+      document.getElementById('val-csem-ohm').textContent = `${selectedSpot.csemResistivityOhmM} Ω·m`;
+      document.getElementById('fesi-bar').style.width = `${selectedSpot.fesi}%`;
+
+      document.getElementById('hud-target-name').textContent = selectedSpot.name;
+      document.getElementById('hud-target-coords').textContent = `Koordinat: ${selectedSpot.coords} • Derinlik: -${selectedSpot.depth}m`;
+
+      document.getElementById('lbl-pump-rate').textContent = `${pumpPct}%`;
+      document.getElementById('lbl-dome-diam').textContent = `${domeDiam} m`;
+      document.getElementById('lbl-pipe-dn').textContent = `DN${pipeDn}`;
+      document.getElementById('lbl-renew-mw').textContent = `${renewMw} MW`;
+
+      document.getElementById('intrusion-warning-hud').classList.toggle('hidden', !simMetrics.intrusionAlert);
+      document.getElementById('out-captured-salinity').textContent = `${simMetrics.actualSalinityPpm.toLocaleString()} ppm`;
+      document.getElementById('out-osmotic-plume').textContent = `${simMetrics.osmoticPlumeBar} bar`;
+      document.getElementById('out-pipe-friction').textContent = `${simMetrics.pipeFrictionBar} bar (${simMetrics.pipeVelocityMs} m/s)`;
+      document.getElementById('out-sec-aquavein').textContent = `${simMetrics.secAquaVein} kWh/m³`;
+      document.getElementById('out-sec-savings').textContent = `(-%${simMetrics.energySavingsPct})`;
+      document.getElementById('out-roi-badge').textContent = `ROI: ${simMetrics.paybackYears} Yıl`;
+
+      document.getElementById('val-daily-m3').textContent = `${simMetrics.dailyExtractedM3.toLocaleString()} m³/gün`;
+      document.getElementById('val-annual-hm3').textContent = `Yıllık: ${simMetrics.annualExtractedHm3} hm³/yıl`;
+      document.getElementById('val-econ-usd').textContent = `$${simMetrics.econTotalUSD}M / yıl`;
+      document.getElementById('val-irrigated-ha').textContent = `${simMetrics.irrigatedHectares.toLocaleString()} Hektar`;
+      document.getElementById('val-pop-served').textContent = `${simMetrics.populationServed.toLocaleString()} Kişi`;
+      document.getElementById('val-co2-saved').textContent = `${simMetrics.co2SavedTons.toLocaleString()} ton/yıl`;
+
+      renderAllScientificCharts();
+    }
+
+    function onSandboxSliderInput() { isSandboxMode = true; updateAllTelemetryAndCharts(); }
+    function resetToOptimalMode() { isSandboxMode = false; selectHotspot(selectedSpot.id); }
+    function enableSandboxMode() { isSandboxMode = true; }
+
+    function setSimulationStage(stageNum, triggerCamera = true) {
+      currentSimulationStage = stageNum;
+      document.getElementById('stage-badge-num').textContent = `AŞAMA ${stageNum} / 6`;
+      if (triggerCamera) {
+        if (stageNum <= 2) switchToSpaceGlobeView();
+        else if (stageNum === 4) setUnderwaterCameraAngle('dome');
+        else if (stageNum === 5) setUnderwaterCameraAngle('platform');
+        else if (stageNum === 6) setUnderwaterCameraAngle('coast');
+        else switchToUnderwaterSystemView();
+      }
+    }
+
+    let activeSlideIndex = 0, pitchInterval = null;
+    const PRESENTATION_SLIDES = [
+      { title: '1. AQUAVEIN-SAR: Uzaydan Denizaltı Tatlı Su Keşfi', en: 'AquaVein-SAR combines satellite radar with subsea hydro-capture domes to harvest submarine freshwater.', tr: 'AquaVein-SAR, uydu radarlarını sualtı yakalama kubbeleriyle birleştirerek denizaltı tatlı su kaynaklarını ekonomiye kazandırır.' },
+      { title: '2. Küresel Su Krizi ve Denizaltı Akifer Potansiyeli', en: 'Billions of cubic meters of low-salinity groundwater discharge into seas without being utilized.', tr: 'Her yıl milyarlarca metreküp düşük tuzluluklu yeraltı suyu kullanılmadan doğrudan denizlere karışmaktadır.' },
+      { title: '3. Sarı SAR Uydusu (Sentinel-1 & NISAR) + TIRS Füzyonu', en: 'Bragg wave damping in SAR backscatter and thermal anomalies pinpoint submarine springs with 1.8m precision.', tr: 'SAR geri saçılımındaki Bragg dalga sönümlenmesi ve termal anomaliler sualtı kaynaklarını 1.8m hassasiyetle tespit eder.' },
+      { title: '4. Sualtı Titanyum Kubbe ve Sondaj Manifoldu', en: 'Our octagonal subsea dome captures brackish freshwater before seawater mixing.', tr: 'Sekizgen sualtı kubbemiz tatlı suyu deniz suyuyla karışmadan kaynağında yakalar.' },
+      { title: '5. Van \'t Hoff Termodinamiği ve %82 Enerji Tasarrufu', en: 'Capturing water at 2,850 ppm drops osmotic pressure to 2.4 bar, cutting energy by 82 percent.', tr: 'Suyu 2.850 ppm tuzlulukta yakalamak ozmotik basıncı 2.4 bara düşürür ve arıtma enerjisini %82 azaltır.' },
+      { title: '6. Kıyı Seraları ve Makroekonomik Katkı', en: 'A single deployment supplies over 100,000 m3 per day and generates 66 million dollars annually.', tr: 'Tek bir kurulum günde 100.000 m³ üzeri tatlı su sağlar ve yılda 66 milyon dolar ekonomik katkı üretir.' },
+      { title: '7. Yatırım Geri Dönüşü (ROI) ve Ölçeklenebilirlik', en: 'With a 1.4 year ROI, AquaVein-SAR is ready for pilot deployment in Mersin Ovacik.', tr: '1.4 yıllık yatırım geri dönüş süresiyle AquaVein-SAR, Mersin Ovacık sahasında pilot kuruluma hazırdır.' }
+    ];
+
+    function speakEnglishText(text) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'en-US';
+      window.speechSynthesis.speak(utter);
+    }
+
+    function testVoiceImmediate() {
+      speakEnglishText('AquaVein SAR telemetry and voice synthesis online.');
+    }
+
+    function startNarratedPitch(durationSec) {
+      stopNarratedPitch();
+      document.getElementById('pitch-overlay-banner').classList.remove('hidden');
+      let remaining = durationSec, stepIdx = 0;
+      function step() {
+        const s = PRESENTATION_SLIDES[Math.min(stepIdx, PRESENTATION_SLIDES.length - 1)];
+        document.getElementById('pitch-subtitle-tr').textContent = s.tr;
+        document.getElementById('pitch-subtitle-en').textContent = s.en;
+        speakEnglishText(s.en);
+        setSimulationStage(Math.min(6, stepIdx + 1), true);
+        stepIdx++;
+      }
+      step();
+      pitchInterval = setInterval(() => {
+        remaining--;
+        document.getElementById('pitch-timer-txt').textContent = `00:${String(Math.max(0, remaining)).padStart(2, '0')}`;
+        if (remaining > 0 && remaining % Math.max(4, Math.floor(durationSec / 6)) === 0) step();
+        if (remaining <= 0) stopNarratedPitch();
+      }, 1000);
+    }
+
+    function stopNarratedPitch() {
+      if (pitchInterval) clearInterval(pitchInterval);
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      document.getElementById('pitch-overlay-banner').classList.add('hidden');
+    }
+
+    function renderPresentationSlide() {
+      const s = PRESENTATION_SLIDES[activeSlideIndex];
+      document.getElementById('slide-counter-badge').textContent = `SLAYT ${activeSlideIndex + 1} / 7`;
+      document.getElementById('slide-body-container').innerHTML = `
+        <h4 class="font-display font-bold text-xl text-biocyan mb-3">${s.title}</h4>
+        <p class="text-sm text-white mb-2"><strong>TR:</strong> ${s.tr}</p>
+        <p class="text-sm text-amber-300 font-mono"><strong>EN:</strong> ${s.en}</p>
+      `;
+    }
+
+    function openPresentationModal() { activeSlideIndex = 0; renderPresentationSlide(); document.getElementById('presentation-modal').classList.remove('hidden'); }
+    function closePresentationModal() { document.getElementById('presentation-modal').classList.add('hidden'); }
+    function changeSlide(d) { activeSlideIndex = (activeSlideIndex + d + 7) % 7; renderPresentationSlide(); }
+    function narrateCurrentSlide() { speakEnglishText(PRESENTATION_SLIDES[activeSlideIndex].en); }
+
+    function downloadPresentationPDF() {
+      if (!window.jspdf || !window.jspdf.jsPDF) return;
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [297, 167] });
+      PRESENTATION_SLIDES.forEach((s, idx) => {
+        if (idx > 0) doc.addPage();
+        doc.setFillColor(4, 14, 28); doc.rect(0, 0, 297, 167, 'F');
+        doc.setTextColor(0, 242, 254); doc.setFontSize(18); doc.text(s.title, 16, 28);
+        doc.setTextColor(255, 255, 255); doc.setFontSize(13); doc.text(doc.splitTextToSize('TR: ' + s.tr, 260), 16, 55);
+        doc.setTextColor(250, 204, 21); doc.text(doc.splitTextToSize('EN: ' + s.en, 260), 16, 95);
+      });
+      doc.save('AquaVein_SAR_7_Slayt_Sunum.pdf');
+    }
+
+    function openSprintModal() { document.getElementById('sprint-modal').classList.remove('hidden'); }
+    function closeSprintModal() { document.getElementById('sprint-modal').classList.add('hidden'); }
+    function openBomReportModal() {
+      document.getElementById('bom-modal-title').textContent = `${selectedSpot.name} – Malzeme Listesi (BoM)`;
+      document.getElementById('bom-modal-body').innerHTML = `<div class="p-3 bg-ocean-950 rounded-xl border border-slate-800 font-mono">Kubbe Çapı: ${simMetrics.domeDiamM}m • Boru: DN${simMetrics.pipeDnMm} • Güç: ${simMetrics.renewMw} MW • CAPEX: $${simMetrics.capexMillionUSD}M</div>`;
+      document.getElementById('bom-modal').classList.remove('hidden');
+    }
+    function closeBomReportModal() { document.getElementById('bom-modal').classList.add('hidden'); }
+
+    function downloadTextFile(name, text) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
+      a.download = name; a.click();
+    }
+    function downloadSprintReportFile(n) { downloadTextFile(`Sprint-${n}.md`, `# Sprint ${n} Report\nSite: ${selectedSpot.name}`); }
+    function downloadCurrentSourceCodeFile() { downloadTextFile('index.html', document.documentElement.outerHTML); }
+    function downloadFullDocumentationMarkdown() { downloadTextFile('README.md', '# AquaVein-SAR v6.0'); }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderHotspotList();
+      initThreeJS();
+      updateAllTelemetryAndCharts();
+    });
+  </script>
+</body>
+</html>
