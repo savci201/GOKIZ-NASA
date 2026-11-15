@@ -1,20 +1,20 @@
-# SPRINT 3 REPORT
-## Web Platform Development, Feature Integration and Implementation
+ SPRINT 3 REPORT
+Web Platform Development, Feature Integration and Implementation
 
-**Team Name:** GÖKİZ  
-**Project Name:**  
+Team Name:** GÖKİZ  
+Project Name:**  
 AQUAVEIN-SAR: Unveiling Hidden Groundwater Pathways: Satellite-Based Detection and Visualization of Submarine Groundwater Discharge
-**Platform Name:** AQUAVEIN-SAR  
-**Challenge:** Dancing with SAR  
-**Event:** NASA Space Apps Challenge Niğde 2026  
-**Date:** November 15, 2026  
-**Sprint:** 3
+Platform Name:** AQUAVEIN-SAR  
+Challenge:** Dancing with SAR  
+Event:** NASA Space Apps Challenge Niğde 2026  
+Date:** November 15, 2026  
+Sprint:** 3
 
-### 1. Sprint Objective
+1. Sprint Objective
 
 The main objective of Sprint 3 was to advance the development of the AQUAVEIN-SAR web platform, integrate its main features, and transform the initial prototype into an interactive digital solution focused on exploring potential submarine groundwater discharge areas through satellite-based observations.
 
-### 2. Activities Completed and Ongoing
+ 2. Activities Completed and Ongoing
 
 - Continued developing the AQUAVEIN-SAR web platform.
 - Completed most of the website structure and interface development.
@@ -25,7 +25,7 @@ The main objective of Sprint 3 was to advance the development of the AQUAVEIN-SA
 - Continued integrating visual and interactive components into the platform.
 - Worked on making complex satellite-related information more accessible and understandable.
 
-### 3. Web Platform Development
+3. Web Platform Development
 
 The AQUAVEIN-SAR platform has reached an advanced stage of development.
 
@@ -41,13 +41,13 @@ Key components include:
 
 **Interactive Web Interface:** A digital environment that combines scientific content, visualizations, and interactive elements.
 
-### 4. Current Development Status
+ 4. Current Development Status
 
 Most of the AQUAVEIN-SAR website has been completed. The team is currently working on additional features, content improvements, and final interface refinements.
 
 The main priority is to improve the platform's functionality, presentation quality, and user experience.
 
-### 5. Sprint Outcomes
+ 5. Sprint Outcomes
 
 - Most of the web platform development was completed.
 - The interactive 3D Earth model was developed.
@@ -56,7 +56,7 @@ The main priority is to improve the platform's functionality, presentation quali
 - Scientific content related to SGD was organized and incorporated.
 - Additional website improvements and refinements are ongoing.
 
-### 6. Next Steps
+6. Next Steps
 
 During Sprint 4, the team will complete the remaining website additions, conduct final functionality checks, review the scientific content, prepare the project presentation and documentation, and produce the final demonstration video.
 
@@ -66,7 +66,9 @@ During Sprint 4, the team will complete the remaining website additions, conduct
 
 **Project Platform:**  
 https://aquavein-sar-540543673062.europe-west1.run.app/
-### Sprint 3 – Progress Evaluation and Workload
+
+
+Sprint 3 – Progress Evaluation and Workload
 
 **Sprint Goal:** Improve the scientific content, visual quality, accessibility, and user experience of the AQUAVEIN-SAR platform.
 
