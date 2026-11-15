@@ -47,3 +47,29 @@ The next sprint will focus on transforming the scientific research into a digita
 **Sprint Status:** Completed
 
 **Team: GÖKİZ**
+### Sprint 1 – Progress Evaluation and Workload
+
+**Sprint Goal:** Define the project scope, identify the main research problem, review scientific resources, and establish the initial development plan for AQUAVEIN-SAR.
+
+**Planned Tasks:**
+- Define the problem of Submarine Groundwater Discharge (SGD).
+- Research SAR technology and its potential applications in Earth observation.
+- Identify relevant NASA resources and scientific references.
+- Determine the project's main objectives and development steps.
+- Assign responsibilities among team members.
+
+**Completed Tasks:**
+- The project concept and its main objectives were established.
+- The SGD problem was identified as the central research focus.
+- NASA NISAR and NASA Earthdata were identified as important research resources.
+- Academic and scientific references were reviewed.
+- Team roles and the initial project roadmap were defined.
+
+**Workload and Completion:**  
+Approximately 85% of the planned tasks were completed. The initial research and project planning stages were largely completed, providing a foundation for technical development.
+
+**To-Do / Next Sprint:**
+- Develop the initial web platform.
+- Design the user interface and interactive 3D Earth model.
+- Explore the use of satellite observations and environmental data.
+- Begin integrating the project's visual and interactive components.
