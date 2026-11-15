@@ -1,0 +1,26 @@
+# AQUAVEIN-SAR
+## Unveiling Hidden Groundwater Pathways: Satellite-Based Detection and Visualization of Submarine Groundwater Discharge
+
+Access to freshwater is becoming an increasingly important global challenge due to climate change, population growth, and the need for sustainable water resource management. However, a significant portion of Earth's freshwater is stored underground. Some of this groundwater flows from coastal aquifers through the seabed and enters the oceans through a natural process known as **Submarine Groundwater Discharge (SGD)**.
+
+As the GÖKİZ team, we developed AQUAVEIN-SAR, inspired by the **Dancing with SAR** challenge of the NASA Space Apps Challenge 2026 and the NASA-ISRO NISAR (NASA-ISRO Synthetic Aperture Radar) mission.
+
+NASA's NISAR mission provides valuable scientific observations for monitoring changes in Earth's surface, land deformation, and moisture-related environmental indicators through Synthetic Aperture Radar (SAR) technology. During the development of our project, we explored scientific and technical resources related to the NISAR mission, NASA Earthdata's open data platform, and radar remote sensing research. These resources helped us develop an approach to investigate satellite observations, environmental changes in coastal regions, and indicators potentially associated with groundwater movement.
+
+### OUR SOLUTION: AQUAVEIN-SAR
+
+AQUAVEIN-SAR is an interactive, web-based research and decision-support platform that brings together satellite observations, geographical information, and environmental indicators.
+
+Our platform aims to:
+
+- **SAR-Based Observation:** Investigate coastal surface changes and environmental indicators potentially associated with SGD using knowledge and observations from the NISAR mission.
+- **Potential Groundwater Discovery:** Explore coastal areas that may present environmental indicators associated with groundwater movement.
+- **Global Freshwater Mapping:** Visualize the geographical distribution of freshwater resources through our interactive 3D Earth model.
+- **Data Visualization:** Present satellite and environmental information through interactive maps, graphics, and visual and audio-based content.
+- **Research and Decision Support:** Help researchers assess potential groundwater locations, plan field investigations, and support sustainable water resource management.
+
+Through AQUAVEIN-SAR, we aim to make complex satellite observations more accessible and understandable while supporting research into submarine groundwater discharge.
+
+Our platform is designed as a research and preliminary assessment tool that supports the evaluation of satellite-derived indicators alongside hydrogeological information and field measurements. Recognizing that satellite observations alone cannot directly visualize freshwater beneath the seabed, we focus on identifying potential areas of interest and supporting further scientific investigation.
+
+**GÖKİZ – Exploring hidden groundwater pathways through the power of space technology.**
