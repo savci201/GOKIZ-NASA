@@ -1,17 +1,17 @@
-# SPRINT 1 REPORT
-## Challenge Selection, Problem Analysis and Scientific Research
+SPRINT 1 REPORT
+ Challenge Selection, Problem Analysis and Scientific Research
 
-**Team Name:** GÖKİZ  
-**Challenge:** Dancing with SAR  
-**Project Name:** AquaVein  
-**Event:** NASA Space Apps Challenge Niğde 2026  
-**Date:** November 14, 2026
+Team Name:** GÖKİZ  
+Challenge:** Dancing with SAR  
+Project Name:** AquaVein  
+Event:** NASA Space Apps Challenge Niğde 2026  
+Date:** November 14, 2026
 
-### 1. Sprint Objective
+1. Sprint Objective
 
 The main objective of Sprint 1 was to select a NASA Space Apps Challenge, understand its scientific background, identify an environmental problem, and conduct preliminary academic research to develop a potential solution.
 
-### 2. Activities Completed
+ 2. Activities Completed
 
 - Reviewed the available NASA Space Apps Challenge topics.
 - Selected the challenge "Dancing with SAR".
@@ -23,7 +23,7 @@ The main objective of Sprint 1 was to select a NASA Space Apps Challenge, unders
 - Explored the environmental importance of submarine groundwater discharge in coastal ecosystems and freshwater resource management.
 - Discussed the potential of satellite-derived data to identify areas that may indicate groundwater discharge.
 
-### 3. Scientific Background and Problem Identification
+3. Scientific Background and Problem Identification
 
 Submarine Groundwater Discharge (SGD) is a natural process in which groundwater from coastal aquifers enters the ocean through the seabed.
 
@@ -31,7 +31,7 @@ Although this phenomenon plays an important role in coastal water systems, ident
 
 Our team identified the need for an accessible, data-driven approach to investigate these processes and support more sustainable coastal groundwater management.
 
-### 4. Sprint Outcomes
+ 4. Sprint Outcomes
 
 - The NASA challenge was selected and analyzed.
 - The scientific foundation of SAR technology was investigated.
@@ -40,14 +40,15 @@ Our team identified the need for an accessible, data-driven approach to investig
 - The environmental problem and potential application areas were defined.
 - Initial ideas for a satellite-data-based decision support system were developed.
 
-### 5. Next Steps
+5. Next Steps
 
 The next sprint will focus on transforming the scientific research into a digital solution concept and initiating the development of the AquaVein web platform.
 
 **Sprint Status:** Completed
 
 **Team: GÖKİZ**
-### Sprint 1 – Progress Evaluation and Workload
+
+ Sprint 1 – Progress Evaluation and Workload
 
 **Sprint Goal:** Define the project scope, identify the main research problem, review scientific resources, and establish the initial development plan for AQUAVEIN-SAR.
 
