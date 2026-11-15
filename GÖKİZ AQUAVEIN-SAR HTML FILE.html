@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AquaVein-SAR | Real 3D Earth, NISAR-Class SAR &amp; 6-Page PDF Monograph</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body { background: #030712; color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; overflow-x: hidden; }
+    .glass { background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(12px); border: 1px solid rgba(56, 189, 248, 0.25); }
+    .glow-text { text-shadow: 0 0 24px rgba(56, 189, 248, 0.55); }
+    #viewport-wrap { width: 100%; height: 560px; border-radius: 1rem; overflow: hidden; position: relative; background: #020617; }
+    #earth-container { width: 100%; height: 100%; cursor: grab; position: relative; z-index: 1; }
+    #earth-container:active { cursor: grabbing; }
+    #extractionCanvas { width: 100%; height: 100%; display: none; position: relative; z-index: 5; }
+  </style>
+</head>
+<body class="antialiased">
+
+  <!-- Navbar (QR Removed) -->
+  <nav class="sticky top-0 z-50 glass px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-3 h-3 rounded-full bg-yellow-400 animate-pulse"></div>
+      <span class="text-xl font-bold tracking-wider text-sky-400">AQUAVEIN-SAR</span>
+      <span class="text-xs px-2 py-0.5 rounded bg-sky-950 text-sky-300 border border-sky-700">Group Gökiz</span>
+    </div>
+    <div class="hidden lg:flex gap-5 text-sm text-slate-300">
+      <a href="#simulation" class="hover:text-sky-400 transition">3D Earth &amp; Satellites</a>
+      <a href="#how-it-works" class="hover:text-sky-400 transition">How It Works</a>
+      <a href="#emagazine" class="hover:text-sky-400 transition">6-Page E-Magazine &amp; PDF</a>
+      <a href="#economy" class="hover:text-sky-400 transition">Blue Economy</a>
+      <a href="#team-sprint" class="hover:text-sky-400 transition">Team &amp; Sprints</a>
+      <a href="#references" class="hover:text-yellow-300 font-semibold text-sky-300 transition">References</a>
+    </div>
+  </nav>
+
+  <!-- SECTION 1: Real NASA Blue Marble 3D Earth + Engineering-Grade SAR Satellites -->
+  <section id="simulation" class="max-w-7xl mx-auto px-6 py-8">
+    <div class="grid lg:grid-cols-12 gap-8 items-start">
+      <div class="lg:col-span-5 space-y-4">
+        <span class="inline-block text-xs font-semibold uppercase tracking-widest text-yellow-400 bg-yellow-950/50 px-3 py-1 rounded-full border border-yellow-700">
+          NASA Blue Marble 3D Earth • NISAR-Class SAR Satellites
+        </span>
+        <h1 class="text-3xl md:text-4xl font-extrabold leading-tight glow-text">
+          From Orbit to <span class="text-emerald-400">Greenhouses</span>: Subsea Freshwater Discovery
+        </h1>
+        <p class="text-slate-300 leading-relaxed text-sm">
+          Four <strong>12m mesh-reflector SAR satellites</strong> orbit over real Earth topography and ocean reflectance.
+          When the primary scanning unit <strong>Yellow-SAR-1</strong> locks onto a coastal submarine groundwater discharge (SGD) candidate,
+          click <strong>Descend to Sea &amp; Extract</strong> to launch the subsea dome, filtration, and coastal greenhouse simulation.
+        </p>
+
+        <!-- Live Status Box -->
+        <div id="alert-box" class="glass p-4 rounded-xl space-y-3 border-l-4 border-l-yellow-400">
+          <div class="flex justify-between items-center">
+            <span id="alert-badge" class="text-xs font-bold uppercase tracking-wider text-yellow-400">ORBITAL SCANNING ACTIVE...</span>
+            <span id="hud-count" class="text-xs px-2 py-0.5 rounded bg-slate-900 text-sky-300">0 / 5 Candidates Inspected</span>
+          </div>
+          <div id="hud-info" class="text-xs text-slate-200 leading-relaxed">
+            4 SAR satellites orbiting real Earth. Waiting for <strong>Yellow-SAR-1</strong> to lock onto a coastal spring candidate...
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <div class="bg-slate-900/80 p-2.5 rounded-lg">
+              <div class="text-[11px] text-slate-400">Simulation Flow Scenario</div>
+              <div id="hud-yield" class="text-sm font-bold text-sky-400">Awaiting Lock</div>
+            </div>
+            <div class="bg-slate-900/80 p-2.5 rounded-lg">
+              <div class="text-[11px] text-slate-400">Energy Benchmark</div>
+              <div id="hud-energy" class="text-sm font-bold text-emerald-400">SWRO: 3.5–4.5 kWh/m³</div>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-400">
+            * Note: Locations and extraction visuals represent preliminary research simulations grounded in official NASA mission parameters.
+          </p>
+        </div>
+
+        <!-- Mission Controls -->
+        <div class="glass p-4 rounded-xl space-y-2.5">
+          <div class="text-xs font-semibold uppercase tracking-wider text-sky-300">Mission Controls</div>
+          <div class="flex flex-wrap gap-2">
+            <button id="panel-descend-btn" onclick="startDescentAndExtraction()" disabled class="px-3.5 py-2 rounded-lg bg-slate-800 text-slate-500 text-xs font-extrabold transition cursor-not-allowed">
+              ⬇ Descend to Sea &amp; Extract (Awaiting Lock)
+            </button>
+            <button onclick="returnToOrbit()" class="px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-xs font-semibold transition cursor-pointer">🛰 Return to Orbit</button>
+            <button onclick="focusMediterranean()" class="px-3 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-xs font-semibold transition cursor-pointer">🌍 Focus Mediterranean</button>
+            <button onclick="toggleVoice()" id="btn-voice" class="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs font-semibold transition cursor-pointer">🔊 Voice: ON</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3D Viewport & Subsea Extraction Canvas -->
+      <div class="lg:col-span-7 glass p-2 rounded-2xl relative">
+        <div id="viewport-wrap">
+          <div id="earth-container"></div>
+          <canvas id="extractionCanvas" width="900" height="560"></canvas>
+        </div>
+
+        <div id="viewport-toast" class="hidden z-30 absolute top-4 left-4 right-4 glass bg-yellow-950/95 border-2 border-yellow-400 px-4 py-3 rounded-xl flex flex-wrap items-center justify-between gap-2 shadow-2xl">
+          <span id="toast-text" class="text-xs md:text-sm font-bold text-yellow-300"></span>
+          <button type="button" onclick="startDescentAndExtraction()" class="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold transition shadow-lg cursor-pointer">
+            🔒 LOCKED! Descend to Sea &amp; Extract →
+          </button>
+        </div>
+
+        <div id="orbit-footer-hud" class="z-20 absolute bottom-4 left-4 right-4 flex flex-wrap gap-2 justify-between items-center pointer-events-none">
+          <div class="glass px-3 py-1.5 rounded-lg text-xs text-sky-300">
+            NASA Blue Marble + Topography + Cloud Layer • 4 NISAR-Class Satellites
+          </div>
+          <div class="glass px-3 py-1.5 rounded-lg text-xs text-slate-300">
+            Left-Drag: Rotate | Right-Drag: Pan | Scroll: Zoom
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Mission Briefing & Uncut English Subtitles -->
+    <div class="mt-6 glass p-6 rounded-2xl border border-sky-500/35 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-sky-400">Live Mission Briefing &amp; Uncut Subtitles</h3>
+        <span id="sub-step" class="text-xs px-2.5 py-1 rounded bg-slate-900 text-emerald-300 border border-slate-700">Phase: Orbital Scan</span>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+        <div id="step-card-0" class="p-3 rounded-xl bg-slate-900/90 border border-slate-700">1. Sea Surface Descent</div>
+        <div id="step-card-1" class="p-3 rounded-xl bg-slate-900/90 border border-slate-700">2. Subsea Dome Placement</div>
+        <div id="step-card-2" class="p-3 rounded-xl bg-slate-900/90 border border-slate-700">3. Natural Pressure &amp; Filtration</div>
+        <div id="step-card-3" class="p-3 rounded-xl bg-slate-900/90 border border-slate-700">4. Coastal Greenhouse Irrigation</div>
+      </div>
+
+      <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 min-h-[68px] flex items-center justify-center text-center">
+        <p id="live-subtitle-text" class="text-sm md:text-base font-medium text-amber-300 leading-relaxed">
+          "Four SAR satellites are scanning over real Earth. Waiting for Yellow-SAR-1 to lock onto a coastal spring candidate..."
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: How It Works -->
+  <section id="how-it-works" class="max-w-7xl mx-auto px-6 py-12">
+    <h2 class="text-3xl font-bold mb-2">How AquaVein-SAR Works (Scientific Basis)</h2>
+    <p class="text-slate-400 mb-8 max-w-3xl">
+      A 6-stage coastal detection and utilization model grounded in NASA-ISRO NISAR, NASA/CNES SWOT, GRACE-FO, UNESCO WWDR2, and NATO SAR educational literature.
+    </p>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="glass p-6 rounded-2xl">
+        <div class="text-yellow-400 font-bold text-lg mb-2">01. Multi-Orbit SAR Scanning</div>
+        <p class="text-sm text-slate-300">Using NISAR's 24 cm L-Band and 9.4 cm S-Band microwave principles (Berens, 2007), coastal regions are scanned 24/7 regardless of cloud cover or darkness.</p>
+      </div>
+      <div class="glass p-6 rounded-2xl">
+        <div class="text-yellow-400 font-bold text-lg mb-2">02. Bragg Scattering &amp; Wave Damping</div>
+        <p class="text-sm text-slate-300">Lower-density fluids rising to the sea surface damp short capillary waves, creating a lower radar backscatter signature compared to surrounding seawater.</p>
+      </div>
+      <div class="glass p-6 rounded-2xl">
+        <div class="text-sky-400 font-bold text-lg mb-2">03. SWOT &amp; GRACE-FO Prioritization</div>
+        <p class="text-sm text-slate-300">GRACE-FO aquifer mass-change anomalies and SWOT coastal topography help narrow down active karstic coastal candidate zones.</p>
+      </div>
+      <div class="glass p-6 rounded-2xl">
+        <div class="text-sky-400 font-bold text-lg mb-2">04. Subsea Collection Dome (Concept)</div>
+        <p class="text-sm text-slate-300">A modular subsea dome is positioned over the detected freshwater vent to capture outflow before complete mixing with salty ocean water.</p>
+      </div>
+      <div class="glass p-6 rounded-2xl">
+        <div class="text-emerald-400 font-bold text-lg mb-2">05. Low-Pressure Filtration</div>
+        <p class="text-sm text-slate-300">Avoiding the high osmotic pressure required in seawater reverse osmosis significantly lowers pumping and treatment energy compared to conventional SWRO plants.</p>
+      </div>
+      <div class="glass p-6 rounded-2xl">
+        <div class="text-emerald-400 font-bold text-lg mb-2">06. Coastal Greenhouse Delivery</div>
+        <p class="text-sm text-slate-300">Filtered natural water is routed directly to coastal greenhouses, supporting resilient agricultural output even during inland droughts.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3: EXTENDED 6-PAGE MONOGRAPH E-MAGAZINE & PRELOADED 6-PAGE PDF -->
+  <section id="emagazine" class="max-w-7xl mx-auto px-6 py-12">
+    <div class="flex flex-wrap justify-between items-end mb-6 gap-4">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-widest text-emerald-400">Strictly 6 Pages • Deep Technical Monograph &amp; Scientific Proof</span>
+        <h2 class="text-3xl font-bold mt-1">6-Page Illustrated E-Magazine &amp; Preloaded PDF</h2>
+        <p class="text-slate-400 text-sm mt-1">Comprehensive scientific proof explaining why every equation, orbital spec, and energy benchmark is valid—preloaded automatically as a zero-error 6-page PDF.</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button onclick="changePage(-1)" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm font-medium cursor-pointer">← Prev</button>
+        <div id="page-pills" class="flex gap-1"></div>
+        <button onclick="changePage(1)" class="px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-sm font-medium cursor-pointer">Next →</button>
+        <a id="preloaded-pdf-download" href="#" download="AquaVein-SAR-6Page-Technical-Monograph.pdf" class="ml-2 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-extrabold transition cursor-pointer shadow-lg">
+          ⬇ Download Preloaded 6-Page PDF
+        </a>
+        <button onclick="togglePdfEmbed()" id="btn-toggle-pdf" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-sm font-bold transition cursor-pointer">
+          📄 View Preloaded PDF Live
+        </button>
+      </div>
+    </div>
+
+    <div id="pdf-status-bar" class="mb-4 px-4 py-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-xs text-emerald-300 flex flex-wrap justify-between items-center gap-2">
+      <span id="pdf-status-text">⏳ Preloading full 6-page scientific PDF monograph into memory...</span>
+      <span class="text-slate-400">Strict 6-Page A4 Landscape Edition • Zero Runtime Conversion Delay</span>
+    </div>
+
+    <div id="magazine-card" class="glass p-6 md:p-8 rounded-2xl grid lg:grid-cols-12 gap-8 items-start"></div>
+
+    <div id="pdf-embed-wrap" class="hidden mt-6 glass p-4 rounded-2xl border-2 border-emerald-500/45 space-y-3">
+      <div class="flex justify-between items-center">
+        <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Preloaded 6-Page PDF Document (Live Built-In Viewer)</span>
+        <a id="preloaded-pdf-open" href="#" target="_blank" class="text-xs text-sky-400 underline font-semibold">Open PDF in New Tab ↗</a>
+      </div>
+      <iframe id="pdf-viewer-frame" class="w-full h-[640px] rounded-xl border border-slate-700 bg-slate-900" title="AquaVein-SAR Preloaded 6-Page PDF"></iframe>
+    </div>
+  </section>
+
+  <!-- SECTION 4: Blue Economy & Verified Energy Comparison -->
+  <section id="economy" class="max-w-7xl mx-auto px-6 py-12">
+    <h2 class="text-3xl font-bold mb-2">Blue Economy &amp; Verified Energy Comparison</h2>
+    <p class="text-slate-400 mb-8">Coastal agriculture and ecosystem benefits evaluated against peer-reviewed desalination energy benchmarks.</p>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="glass p-6 rounded-2xl border-t-4 border-t-emerald-400">
+        <h3 class="text-xl font-bold mb-2">SWRO: 3.5–4.5 kWh/m³</h3>
+        <p class="text-sm text-slate-300">
+          Peer-reviewed studies report total specific energy consumption (including pre/post-treatment) of real seawater reverse osmosis (SWRO) plants at <strong>3.5–4.5 kWh/m³</strong> (theoretical minimum ~1.07 kWh/m³). Capturing low-salinity natural springs aims to avoid high-pressure RO pumping.
+        </p>
+      </div>
+      <div class="glass p-6 rounded-2xl border-t-4 border-t-sky-400">
+        <h3 class="text-xl font-bold mb-2">Global Groundwater &amp; FSGD</h3>
+        <p class="text-sm text-slate-300">
+          According to UNESCO (2006, p. 121), ~30% of Earth's freshwater resides in groundwater aquifers. Luijendijk et al. (2020) and Zhou et al. (2019) demonstrate that fresh submarine groundwater discharge (FSGD) plays a vital role in coastal water budgets.
+        </p>
+      </div>
+      <div class="glass p-6 rounded-2xl border-t-4 border-t-amber-400">
+        <h3 class="text-xl font-bold mb-2">Zero Concentrated Brine</h3>
+        <p class="text-sm text-slate-300">
+          Collecting naturally discharging low-salinity freshwater from the seabed rather than separating high-salinity seawater eliminates concentrated brine discharge into fragile coastal habitats.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 5: Team · Group Gökiz & Sprint Plan -->
+  <section id="team-sprint" class="max-w-7xl mx-auto px-6 py-12">
+    <div class="glass p-8 rounded-2xl space-y-6 border border-emerald-500/30">
+      <div class="flex flex-wrap justify-between items-start gap-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-widest text-emerald-400">NASA Space Apps Challenge Niğde • November 14–15, 2026</span>
+          <h2 class="text-3xl font-bold mt-1">Team · Group Gökiz &amp; Sprint Plan</h2>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-slate-900/75 p-5 rounded-xl border border-slate-800 space-y-2">
+          <h3 class="text-lg font-bold text-yellow-400">Project Team</h3>
+          <ul class="text-sm text-slate-200 space-y-1.5">
+            <li>• <strong>Yusuf Emir Savcı</strong> — Team Captain (System Architecture &amp; 3D Simulation)</li>
+            <li>• <strong>Mine Yıldırım</strong> — Team Owner (Product Management &amp; Blue Economy)</li>
+            <li>• <strong>Elif Doğan Yılmaz</strong> — Team Member (NASA Satellite Data &amp; References)</li>
+            <li>• <strong>Hülya Naz Çubukçu</strong> — Team Member (Subsea-Greenhouse Pipeline, E-Magazine &amp; UX)</li>
+          </ul>
+        </div>
+        <div class="bg-slate-900/75 p-5 rounded-xl border border-slate-800 space-y-2">
+          <h3 class="text-lg font-bold text-sky-400">Pre-Event Preparation &amp; Sprints</h3>
+          <ul class="text-xs text-slate-300 space-y-1.5 leading-relaxed">
+            <li>• <strong>Sprint 1 · Scope &amp; Task Plan:</strong> Defining the SGD challenge and coastal candidate zones.</li>
+            <li>• <strong>Sprint 2 · Data Analysis &amp; Tech Testing:</strong> NASA Blue Marble 3D globe and 4-SAR satellite lock testing.</li>
+            <li>• <strong>Sprint 3 · Scientific Content &amp; UX:</strong> Integrating peer-reviewed citations and preloaded 6-page PDF monograph.</li>
+            <li>• <strong>Sprint 4 · Demo &amp; Delivery Readiness:</strong> External share QR generation, GitHub deployment, and jury submission.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 6: DEDICATED REFERENCES SECTION -->
+  <section id="references" class="max-w-7xl mx-auto px-6 py-12 pb-20">
+    <div class="glass p-8 rounded-2xl border-2 border-sky-500/40 space-y-6">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-widest text-yellow-400">Verified Scientific Provenance</span>
+        <h2 class="text-3xl font-bold mt-1 text-sky-400">References</h2>
+        <p class="text-sm text-slate-300 mt-1">
+          All orbital parameters, launch dates, radar physics, submarine groundwater discharge estimates, desalination energy benchmarks, and 3D Earth textures in this platform are sourced from the following official and peer-reviewed publications:
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-5 text-xs md:text-sm">
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 space-y-1.5">
+          <div class="font-bold text-sky-300">[1] NASA–ISRO NISAR Official Mission Portal &amp; Handbook</div>
+          <p class="text-slate-300">
+            <strong>Data Used:</strong> Launch date July 30, 2025 (Satish Dhawan Space Centre, GSLV-II), 747 km orbit, 98.4° inclination, 12-day repeat cycle, 24 cm L-Band and 9.4 cm S-Band SAR, &gt;240 km swath, 12 m deployable mesh reflector antenna, and July 20, 2026 provisional L-band data release.
+          </p>
+          <a href="https://science.nasa.gov/mission/nisar/" target="_blank" class="inline-block text-sky-400 underline break-all">https://science.nasa.gov/mission/nisar/</a>
+        </div>
+
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 space-y-1.5">
+          <div class="font-bold text-sky-300">[2] NASA / CNES SWOT Official Mission Portal</div>
+          <p class="text-slate-300">
+            <strong>Data Used:</strong> Launch date December 16, 2022 (Vandenberg, Falcon 9), 857 km calibration / 891 km science orbit, 77.6° inclination, 21-day repeat, and KaRIn Ka-Band 120 km swath ocean surface topography specifications.
+          </p>
+          <a href="https://swot.jpl.nasa.gov/" target="_blank" class="inline-block text-sky-400 underline break-all">https://swot.jpl.nasa.gov/</a>
+        </div>
+
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 space-y-1.5">
+          <div class="font-bold text-sky-300">[3] NASA / GFZ GRACE &amp; GRACE-FO (JPL)</div>
+          <p class="text-slate-300">
+            <strong>Data Used:</strong> Original GRACE mission (March 17, 2002 – 2017) and GRACE-FO launch (May 22, 2018, ~490 km near-polar orbit, ~220 km twin-satellite separation); gravity anomaly tracking of terrestrial groundwater storage and aquifer discharge.
+          </p>
+          <a href="https://gracefo.jpl.nasa.gov/" target="_blank" class="inline-block text-sky-400 underline break-all">https://gracefo.jpl.nasa.gov/</a>
+        </div>
+
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 space-y-1.5">
+          <div class="font-bold text-sky-300">[4] NASA Earthdata &amp; ARSET SAR Training Materials</div>
+          <p class="text-slate-300">
+            <strong>Data Used:</strong> SAR microwave backscatter fundamentals and capillary wave damping principles, where lower-density surface films reduce short ocean wave roughness to produce low-backscatter signatures (Johansson &amp; Podest, NASA ARSET, 2022).
+          </p>
+          <a href="https://www.earthdata.nasa.gov/learn/backgrounders/remote-sensing/sar" target="_blank" class="inline-block text-sky-400 underline break-all">https://www.earthdata.nasa.gov/learn/backgrounders/remote-sensing/sar</a>
+        </div>
+
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 space-y-1.5">
+          <div class="font-bold text-emerald-300">[5] Fresh Submarine Groundwater Discharge (FSGD) Literature</div>
+          <p class="text-slate-300">
+            <strong>Data Used:</strong> Global FSGD represents ~1% of river discharge while remaining vital for coastal ecosystems and local water budgets: Luijendijk, E., Gleeson, T., &amp; Moosdorf, N. (2020), <em>Nature Communications</em> 11, 1260; Zhou, Y. et al. (2019), <em>Geophysical Research Letters</em> 46, 5855–5863; Moore, W. S. (2010), <em>Annual Review of Marine Science</em>.
+          </p>
+          <a href="https://www.nature.com/articles/s41467-020-15064-8" target="_blank" class="inline-block text-sky-400 underline break-all">https://www.nature.com/articles/s41467-020-15064-8</a>
+        </div>
+
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 space-y-1.5">
+          <div class="font-bold text-emerald-300">[6] Seawater Reverse Osmosis (SWRO) Specific Energy Literature</div>
+          <p class="text-slate-300">
+            <strong>Data Used:</strong> Thermodynamic minimum separation energy (~1.07 kWh/m³ for 35,000 mg/L TDS seawater) vs. actual full-plant SWRO specific energy consumption (<strong>3.5–4.5 kWh/m³</strong> including pre/post-treatment): <em>MDPI Water/Energies</em> (2024), "Cost Studies of Reverse Osmosis Desalination Plants"; Ludwig, H. (2010), <em>Desalination and Water Treatment</em> 13, 13–25.
+          </p>
+          <a href="https://www.mdpi.com/" target="_blank" class="inline-block text-sky-400 underline">https://www.mdpi.com/ (SWRO SEC Benchmark)</a>
+        </div>
+
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 space-y-1.5">
+          <div class="font-bold text-amber-300">[7] Bragg Scattering &amp; Surface Film Wave Damping Theory</div>
+          <p class="text-slate-300">
+            <strong>Data Used:</strong> Microwave ocean surface Bragg resonance and Marangoni / surface-tension capillary wave damping theory: Rice, S. O. (1951); Valenzuela, G. R. (1978); Jones, C. E. &amp; Holt, B. (2017–2021) L-Band SAR studies.
+          </p>
+        </div>
+
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 space-y-1.5">
+          <div class="font-bold text-amber-300">[8] NASA Blue Marble &amp; 3D Earth Textures (Google Earth Standard)</div>
+          <p class="text-slate-300">
+            <strong>Data Used:</strong> Real satellite surface imagery, global topography (bump map), ocean reflectance (water specular map), and atmospheric cloud layer textures sourced from NASA Visible Earth / Three.js &amp; Three-Globe open repositories.
+          </p>
+          <a href="https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/" target="_blank" class="inline-block text-sky-400 underline break-all">NASA Blue Marble Next Generation</a>
+        </div>
+
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 space-y-1.5">
+          <div class="font-bold text-yellow-300">[9] UNESCO (2006) — UN World Water Development Report II</div>
+          <p class="text-slate-300">
+            <strong>Full Citation:</strong> UNESCO (2006). <em>Water: A Shared Responsibility</em>, The United Nations World Water Development Report II (UN-WATER/WWAP/2006/3), Paris, p. 121.<br/>
+            <strong>Data Used:</strong> Global distribution of Earth's water resources (~30% of freshwater stored in groundwater aquifers) and increasing global pressures on freshwater reserves.
+          </p>
+          <a href="https://unesdoc.unesco.org/ark:/48223/pf0000144409" target="_blank" class="inline-block text-sky-400 underline break-all">https://unesdoc.unesco.org/ark:/48223/pf0000144409</a>
+        </div>
+
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 space-y-1.5">
+          <div class="font-bold text-yellow-300">[10] Berens, P. (2007) — NATO SAR Educational Notes</div>
+          <p class="text-slate-300">
+            <strong>Full Citation:</strong> Berens, P. (2007). <em>Introduction to Synthetic Aperture Radar (SAR)</em>. In: Advanced Radar Systems, Signal and Data Processing, NATO Research and Technology Organisation (RTO) Educational Notes RTO-EN-SET-086bis, Paper 3, pp. 3-1–3-16.<br/>
+            <strong>Data Used:</strong> Principles explaining why optical sensors fail under cloud cover or darkness while SAR achieves 24/7 high-resolution imaging via coherent synthetic aperture processing and radar signal propagation.
+          </p>
+          <a href="https://publications.sto.nato.int/publications/STO%20Educational%20Notes/RTO-EN-SET-086bis/EN-SET-086bis-03.pdf" target="_blank" class="inline-block text-sky-400 underline break-all">https://publications.sto.nato.int/.../EN-SET-086bis-03.pdf</a>
+        </div>
+      </div>
+
+      <div class="bg-amber-950/30 border border-amber-500/40 rounded-xl p-4 text-xs text-amber-200 leading-relaxed">
+        <strong>Scientific Transparency Statement:</strong> This application is an educational and engineering prototype; live automated API ingestion of raw NISAR/SWOT raster products has not yet been implemented.
+        The 5 coastal candidate pins on the 3D globe and the subsea-to-greenhouse animation represent preliminary research simulations grounded in official NASA mission parameters.
+      </div>
+    </div>
+  </section>
+
+  <footer class="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+    AquaVein-SAR © 2026 | Group Gökiz (Yusuf Emir Savcı, Mine Yıldırım, Elif Doğan Yılmaz, Hülya Naz Çubukçu) — NASA Space Apps Challenge Niğde
+  </footer>
+
+  <script>
+    const earthContainer = document.getElementById('earth-container');
+    const extCanvas = document.getElementById('extractionCanvas');
+    const extCtx = extCanvas.getContext('2d');
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(44, earthContainer.clientWidth / earthContainer.clientHeight, 0.1, 1000);
+    camera.position.set(2.82, 2.15, -1.50);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+    renderer.setSize(earthContainer.clientWidth, earthContainer.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    earthContainer.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.dampingFactor = 0.06; controls.enablePan = true;
+    controls.minDistance = 1.65; controls.maxDistance = 9.0;
+
+    // 3D Starfield
+    const starGeo = new THREE.BufferGeometry();
+    const starVerts = [];
+    for (let i = 0; i < 2000; i++) {
+      const r = 24 + Math.random() * 60, th = Math.random() * Math.PI * 2, ph = Math.acos(2 * Math.random() - 1);
+      starVerts.push(r * Math.sin(ph) * Math.cos(th), r * Math.sin(ph) * Math.sin(th), r * Math.cos(ph));
+    }
+    starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVerts, 3));
+    scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xe2e8f0, size: 0.14, transparent: true, opacity: 0.85 })));
+
+    function createFallbackEarthTexture() {
+      const c = document.createElement('canvas'); c.width = 1024; c.height = 512;
+      const ctx = c.getContext('2d');
+      const g = ctx.createLinearGradient(0, 0, 0, 512);
+      g.addColorStop(0, '#021226'); g.addColorStop(0.5, '#073b6e'); g.addColorStop(1, '#021226');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, 1024, 512);
+      ctx.fillStyle = '#15803d';
+      [[215,158,95,55],[280,310,60,90],[522,145,112,55],[568,165,58,22],[555,272,78,95],[748,172,130,72],[838,348,65,44]]
+        .forEach(([x,y,rx,ry]) => { ctx.beginPath(); ctx.ellipse(x,y,rx,ry,0.1,0,Math.PI*2); ctx.fill(); });
+      return new THREE.CanvasTexture(c);
+    }
+
+    const texLoader = new THREE.TextureLoader();
+    texLoader.setCrossOrigin('anonymous');
+
+    const earthMat = new THREE.MeshPhongMaterial({
+      map: createFallbackEarthTexture(),
+      shininess: 22,
+      specular: new THREE.Color(0x334155)
+    });
+
+    texLoader.load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg', (tex) => { earthMat.map = tex; earthMat.needsUpdate = true; });
+    texLoader.load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png', (bumpTex) => { earthMat.bumpMap = bumpTex; earthMat.bumpScale = 0.035; earthMat.needsUpdate = true; });
+    texLoader.load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-water.png', (specTex) => { earthMat.specularMap = specTex; earthMat.specular = new THREE.Color(0x38bdf8); earthMat.shininess = 28; earthMat.needsUpdate = true; });
+
+    const earth = new THREE.Mesh(new THREE.SphereGeometry(1.3, 64, 64), earthMat);
+    scene.add(earth);
+
+    const cloudMat = new THREE.MeshPhongMaterial({ transparent: true, opacity: 0.38, depthWrite: false });
+    const cloudLayer = new THREE.Mesh(new THREE.SphereGeometry(1.318, 64, 64), cloudMat);
+    texLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_clouds_1024.png', (cTex) => { cloudMat.map = cTex; cloudMat.needsUpdate = true; }, undefined, () => { cloudMat.opacity = 0; });
+    scene.add(cloudLayer);
+
+    scene.add(new THREE.Mesh(new THREE.SphereGeometry(1.375, 64, 64), new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.14, side: THREE.BackSide })));
+
+    function latLonToVec3(lat, lon, r) {
+      const phi = (90 - lat) * (Math.PI / 180), theta = (lon + 180) * (Math.PI / 180);
+      return new THREE.Vector3(-r * Math.sin(phi) * Math.cos(theta), r * Math.cos(phi), r * Math.sin(phi) * Math.sin(theta));
+    }
+
+    const springs = [
+      { name: "Eastern Med. Candidate (Finike/Antalya Offshore)", lat: 36.15, lon: 30.15, flowText: "Simulation: Active Karst Plume", locked: false },
+      { name: "Black Sea Candidate (Sinop Offshore)", lat: 42.15, lon: 35.10, flowText: "Simulation: Coastal Aquifer", locked: false },
+      { name: "Red Sea Coastal Candidate (Jeddah Offshore)", lat: 21.30, lon: 38.80, flowText: "Simulation: Subsea Outflow", locked: false },
+      { name: "Atlantic Continental Shelf (Florida Straits)", lat: 25.80, lon: -79.50, flowText: "Simulation: Karst SGD Zone", locked: false },
+      { name: "Indian Ocean Candidate (Kerala Offshore)", lat: 10.80, lon: 75.50, flowText: "Simulation: Monsoon Coastal Aquifer", locked: false }
+    ];
+
+    const springMeshes = springs.map(sp => {
+      const m = new THREE.Mesh(new THREE.SphereGeometry(0.034, 16, 16), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+      m.position.copy(latLonToVec3(sp.lat, sp.lon, 1.312));
+      earth.add(m);
+      return m;
+    });
+
+    function createRealSARSpacecraft(accentColor, beamColor) {
+      const sat = new THREE.Group();
+      const bus = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.16, 8), new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.88, roughness: 0.22 }));
+      bus.rotation.x = Math.PI / 2;
+      const payload = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.11, 0.08), new THREE.MeshStandardMaterial({ color: accentColor, metalness: 0.75, roughness: 0.28 }));
+      payload.position.z = 0.08;
+
+      const panelMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, metalness: 0.65, roughness: 0.25, emissive: 0x0f172a });
+      const yokeMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.85, roughness: 0.2 });
+      const wingLeft = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.008, 0.12), panelMat); wingLeft.position.set(-0.24, 0, -0.02);
+      const wingRight = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.008, 0.12), panelMat); wingRight.position.set(0.24, 0, -0.02);
+      const yoke = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.56, 8), yokeMat); yoke.rotation.z = Math.PI / 2; yoke.position.set(0, 0, -0.02);
+
+      const boom = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.011, 0.24, 8), yokeMat); boom.rotation.x = Math.PI / 3; boom.position.set(0, 0.09, 0.16);
+      const dishRim = new THREE.Mesh(new THREE.TorusGeometry(0.125, 0.007, 10, 32), new THREE.MeshStandardMaterial({ color: 0xfde047, metalness: 0.9, roughness: 0.2 }));
+      dishRim.position.set(0, 0.16, 0.26); dishRim.rotation.x = Math.PI / 3.5;
+      const dishMesh = new THREE.Mesh(new THREE.CircleGeometry(0.124, 28), new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.7, roughness: 0.35, transparent: true, opacity: 0.78, side: THREE.DoubleSide }));
+      dishMesh.position.copy(dishRim.position); dishMesh.rotation.copy(dishRim.rotation);
+      const kaDish = new THREE.Mesh(new THREE.ConeGeometry(0.032, 0.03, 16), yokeMat); kaDish.position.set(0, -0.08, -0.06); kaDish.rotation.x = -Math.PI / 2;
+
+      const beam = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.80, 28, 1, true), new THREE.MeshBasicMaterial({ color: beamColor, transparent: true, opacity: 0.24, side: THREE.DoubleSide }));
+      beam.rotation.x = -Math.PI / 2; beam.position.z = 0.54;
+
+      sat.add(bus, payload, wingLeft, wingRight, yoke, boom, dishRim, dishMesh, kaDish, beam);
+      return { group: sat, beam: beam };
+    }
+
+    const orbitConfigs = [
+      { name: "Yellow-SAR-1", isYellow: true,  radius: 2.04, speed: 0.022, incX: 0.56, incZ: 0.15, angle: 0.0, accent: 0xfacc15, beamColor: 0xfacc15 },
+      { name: "AquaVein-SAR-2", isYellow: false, radius: 2.18, speed: 0.018, incX: -0.64, incZ: 0.45, angle: 1.8, accent: 0xe2e8f0, beamColor: 0x38bdf8 },
+      { name: "AquaVein-SAR-3", isYellow: false, radius: 1.96, speed: 0.026, incX: 1.12, incZ: -0.35, angle: 3.5, accent: 0xe2e8f0, beamColor: 0x38bdf8 },
+      { name: "AquaVein-SAR-4", isYellow: false, radius: 2.28, speed: 0.015, incX: 0.18, incZ: 0.92, angle: 5.0, accent: 0xe2e8f0, beamColor: 0x38bdf8 }
+    ];
+
+    const satellites = orbitConfigs.map(cfg => {
+      const ring = new THREE.Mesh(new THREE.RingGeometry(cfg.radius - 0.005, cfg.radius + 0.005, 96), new THREE.MeshBasicMaterial({ color: cfg.isYellow ? 0xfacc15 : 0x38bdf8, transparent: true, opacity: cfg.isYellow ? 0.34 : 0.15, side: THREE.DoubleSide }));
+      ring.rotation.x = Math.PI / 2 + cfg.incX; ring.rotation.y = cfg.incZ; scene.add(ring);
+      const satObj = createRealSARSpacecraft(cfg.accent, cfg.beamColor); scene.add(satObj.group);
+      return { ...cfg, ...satObj };
+    });
+
+    scene.add(new THREE.AmbientLight(0xcbd5e1, 0.72));
+    const sunLight = new THREE.DirectionalLight(0xfffbeb, 1.45); sunLight.position.set(6, 3.5, -2); scene.add(sunLight);
+    const rimLight = new THREE.DirectionalLight(0x38bdf8, 0.45); rimLight.position.set(-5, -2, 4); scene.add(rimLight);
+
+    let systemState = 'SCANNING', activeSpringIdx = -1, lockedSat = null, scanTimer = 0;
+    let lockedCount = 0, voiceEnabled = true, extAnimId = null, extStart = 0;
+    let stageSpeechDone = false, stageSpeechFinishedAt = 0, speechSafetyTimer = null;
+
+    function toggleVoice() {
+      voiceEnabled = !voiceEnabled;
+      document.getElementById('btn-voice').innerText = voiceEnabled ? '🔊 Voice: ON' : '🔇 Voice: OFF';
+      if (!voiceEnabled && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        stageSpeechDone = true;
+        stageSpeechFinishedAt = performance.now();
+      }
+    }
+
+    function speakNarration(text, onDone) {
+      if (speechSafetyTimer) { clearTimeout(speechSafetyTimer); speechSafetyTimer = null; }
+      if (!voiceEnabled || !('speechSynthesis' in window)) {
+        if (onDone) onDone();
+        return;
+      }
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'en-US'; u.rate = 0.84; u.pitch = 1.0;
+      window._activeUtterance = u;
+      let finished = false;
+      const doneOnce = () => {
+        if (finished) return;
+        finished = true;
+        if (speechSafetyTimer) { clearTimeout(speechSafetyTimer); speechSafetyTimer = null; }
+        if (onDone) onDone();
+      };
+      u.onend = doneOnce; u.onerror = doneOnce;
+      window.speechSynthesis.speak(u);
+      speechSafetyTimer = setTimeout(doneOnce, 16000);
+    }
+
+    function focusMediterranean() {
+      camera.position.set(2.82, 2.15, -1.50); controls.target.set(0, 0, 0); controls.update();
+    }
+
+    function highlightStepCard(activeIdx) {
+      for (let i = 0; i < 4; i++) {
+        const el = document.getElementById(`step-card-${i}`);
+        if (i === activeIdx) el.className = 'p-3 rounded-xl bg-emerald-950/80 border-2 border-emerald-400 text-emerald-300 font-bold';
+        else if (i < activeIdx) el.className = 'p-3 rounded-xl bg-sky-950/60 border border-sky-500 text-sky-300';
+        else el.className = 'p-3 rounded-xl bg-slate-900/90 border border-slate-700 text-slate-400';
+      }
+    }
+
+    function lockOntoSpring(sat, springIdx) {
+      systemState = 'LOCKED'; lockedSat = sat; activeSpringIdx = springIdx;
+      const sp = springs[springIdx]; sp.locked = true;
+      springMeshes[springIdx].material.color.setHex(0x10b981);
+      sat.beam.material.color.setHex(0x10b981); sat.beam.material.opacity = 0.52;
+
+      const pBtn = document.getElementById('panel-descend-btn');
+      pBtn.disabled = false;
+      pBtn.className = 'px-3.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold transition cursor-pointer animate-pulse';
+      pBtn.innerText = '⬇ LOCKED! Descend to Sea & Extract';
+
+      document.getElementById('alert-badge').innerText = `🔒 ${sat.name} TARGET LOCKED`;
+      document.getElementById('hud-info').innerHTML = `<strong class="text-yellow-300">Yellow-SAR-1 Locked!</strong><br/>Candidate: <strong>${sp.name}</strong> (${sp.lat}°N, ${sp.lon}°E)<br/>Click <strong>"Descend to Sea &amp; Extract"</strong> to launch the subsea dome and greenhouse simulation.`;
+      document.getElementById('toast-text').innerText = `🎯 [${sat.name}] locked onto ${sp.name}!`;
+      document.getElementById('viewport-toast').classList.remove('hidden');
+
+      const worldSpringPos = new THREE.Vector3(); springMeshes[springIdx].getWorldPosition(worldSpringPos);
+      camera.position.copy(worldSpringPos.clone().multiplyScalar(2.45));
+      controls.target.copy(worldSpringPos.clone().multiplyScalar(0.45)); controls.update();
+
+      const msg = `${sat.name} locked onto ${sp.name}. Click Descend to Sea and Extract to start the simulation.`;
+      document.getElementById('sub-step').innerText = `Phase: Target Locked (${sp.name})`;
+      document.getElementById('live-subtitle-text').innerText = `"${msg}"`;
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      speakNarration(msg);
+    }
+
+    function drawRealisticPipelineFrame(ctx, W, H, t, stage, stageElapsed, spName) {
+      const sky = ctx.createLinearGradient(0, 0, 0, H * 0.38);
+      sky.addColorStop(0, '#020617'); sky.addColorStop(0.6, '#0c4a6e'); sky.addColorStop(1, '#38bdf8');
+      ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H * 0.38);
+
+      const seaY = H * 0.38;
+      const sea = ctx.createLinearGradient(0, seaY, 0, H);
+      sea.addColorStop(0, '#0284c7'); sea.addColorStop(0.4, '#0369a1'); sea.addColorStop(1, '#04142b');
+      ctx.fillStyle = sea; ctx.fillRect(0, seaY, W * 0.62, H - seaY);
+
+      for (let i = 0; i < 5; i++) {
+        const rx = W * (0.08 + i * 0.11) + Math.sin(t * 0.8 + i) * 14;
+        const beamG = ctx.createLinearGradient(rx, seaY, rx + 50, H * 0.88);
+        beamG.addColorStop(0, 'rgba(186, 230, 253, 0.2)'); beamG.addColorStop(1, 'rgba(186, 230, 253, 0)');
+        ctx.fillStyle = beamG; ctx.beginPath(); ctx.moveTo(rx - 18, seaY); ctx.lineTo(rx + 18, seaY); ctx.lineTo(rx + 85, H * 0.9); ctx.lineTo(rx - 15, H * 0.9); ctx.closePath(); ctx.fill();
+      }
+
+      const bedY = H * 0.87;
+      ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, bedY);
+      for (let x = 0; x <= W * 0.65; x += 25) ctx.lineTo(x, bedY + Math.sin(x * 0.03) * 6);
+      ctx.lineTo(W * 0.65, H); ctx.closePath(); ctx.fill();
+
+      const landX = W * 0.58;
+      ctx.fillStyle = '#14532d'; ctx.beginPath(); ctx.moveTo(landX, H); ctx.lineTo(landX - 18, H * 0.72); ctx.lineTo(landX + 12, seaY - 12); ctx.lineTo(W, seaY - 12); ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+
+      const ventX = W * 0.27;
+      const plumeG = ctx.createRadialGradient(ventX, bedY, 5, ventX, bedY - 40, 85);
+      plumeG.addColorStop(0, 'rgba(56, 189, 248, 0.88)'); plumeG.addColorStop(1, 'rgba(56, 189, 248, 0)');
+      ctx.fillStyle = plumeG; ctx.beginPath(); ctx.arc(ventX, bedY - 20, 85, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#7dd3fc'; ctx.beginPath(); ctx.ellipse(ventX, bedY + 2, 54, 11, 0, 0, Math.PI * 2); ctx.fill();
+
+      for (let i = 0; i < 12; i++) {
+        const by = bedY - ((t * 55 + i * 24) % 190);
+        const bx = ventX + Math.sin(t * 3 + i) * 16;
+        ctx.fillStyle = 'rgba(224, 242, 254, 0.55)'; ctx.beginPath(); ctx.arc(bx, by, 2.5 + (i % 3), 0, Math.PI * 2); ctx.fill();
+      }
+
+      ctx.strokeStyle = 'rgba(224, 242, 254, 0.8)'; ctx.lineWidth = 3; ctx.beginPath();
+      for (let x = 0; x <= landX + 10; x += 10) {
+        const y = seaY + Math.sin(x * 0.035 + t * 3.2) * 4.5;
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      const pipeY = seaY - 44;
+      const domeY = stage === 0
+        ? seaY - 95 + Math.min(1, stageElapsed / 3.5) * 95
+        : stage === 1
+          ? seaY + Math.min(1, stageElapsed / 4.0) * (bedY - seaY - 12)
+          : bedY - 12;
+      ctx.fillStyle = '#94a3b8'; ctx.fillRect(ventX - 7, pipeY, 14, Math.max(20, domeY - pipeY)); ctx.fillRect(ventX - 7, pipeY, W * 0.42, 12);
+
+      const domeG = ctx.createRadialGradient(ventX - 10, domeY - 18, 4, ventX, domeY, 42);
+      domeG.addColorStop(0, '#fef08a'); domeG.addColorStop(0.5, '#eab308'); domeG.addColorStop(1, '#854d0e');
+      ctx.fillStyle = domeG; ctx.beginPath(); ctx.arc(ventX, domeY, 38, Math.PI, 0); ctx.closePath(); ctx.fill();
+
+      const purX = W * 0.64, purY = seaY - 76;
+      ctx.fillStyle = '#0f172a'; ctx.fillRect(purX, purY, 114, 64);
+      ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2; ctx.strokeRect(purX, purY, 114, 64);
+      ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('FILTRATION', purX + 57, purY + 28); ctx.fillStyle = '#94a3b8'; ctx.fillText('Low-Pressure', purX + 57, purY + 46);
+      ctx.fillStyle = '#64748b'; ctx.fillRect(purX + 114, seaY - 38, W * 0.24, 9);
+
+      [W * 0.79, W * 0.89].forEach(gx => {
+        const gw = W * 0.088, gh = 68, gy = seaY - 12;
+        ctx.fillStyle = stage === 3 ? 'rgba(16, 185, 129, 0.45)' : 'rgba(148, 163, 184, 0.22)';
+        ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 2; ctx.beginPath();
+        ctx.moveTo(gx, gy); ctx.lineTo(gx, gy - 44); ctx.lineTo(gx + gw / 2, gy - gh); ctx.lineTo(gx + gw, gy - 44); ctx.lineTo(gx + gw, gy); ctx.closePath(); ctx.fill(); ctx.stroke();
+        for (let row = 0; row < 4; row++) {
+          ctx.fillStyle = stage === 3 ? '#22c55e' : '#475569';
+          ctx.beginPath(); ctx.arc(gx + 10 + row * (gw - 20) / 3, gy - 12, stage === 3 ? 7.5 : 4, 0, Math.PI * 2); ctx.fill();
+        }
+      });
+
+      if (stage >= 2) {
+        ctx.fillStyle = '#7dd3fc';
+        for (let i = 0; i < 8; i++) {
+          ctx.beginPath(); ctx.arc(ventX, domeY - ((t * 145 + i * 35) % Math.max(40, domeY - pipeY)), 4, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(ventX + ((t * 170 + i * 48) % (purX - ventX)), pipeY + 6, 4, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      if (stage === 3) {
+        ctx.fillStyle = '#34d399';
+        for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.arc(purX + 114 + ((t * 125 + i * 32) % (W * 0.21)), seaY - 33, 4, 0, Math.PI * 2); ctx.fill(); }
+      }
+      ctx.fillStyle = '#e0f2fe'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`CANDIDATE: ${spName}`, ventX, bedY + 34);
+      ctx.fillStyle = '#86efac'; ctx.fillText('COASTAL GREENHOUSES', W * 0.88, seaY + 14);
+    }
+
+    function startDescentAndExtraction() {
+      if (activeSpringIdx < 0) activeSpringIdx = 0;
+      systemState = 'EXTRACTING';
+      document.getElementById('viewport-toast').classList.add('hidden');
+      document.getElementById('orbit-footer-hud').classList.add('hidden');
+      earthContainer.style.display = 'none'; extCanvas.style.display = 'block'; extCanvas.width = 900; extCanvas.height = 560;
+
+      const pBtn = document.getElementById('panel-descend-btn'); pBtn.disabled = true;
+      pBtn.className = 'px-3.5 py-2 rounded-lg bg-slate-800 text-emerald-400 text-xs font-bold cursor-default';
+      pBtn.innerText = '✅ Subsea Flow Simulation Active...';
+
+      const sp = springs[activeSpringIdx]; lockedCount++;
+      document.getElementById('hud-count').innerText = `${lockedCount} / ${springs.length} Candidates Inspected`;
+      document.getElementById('hud-yield').innerText = sp.flowText;
+      document.getElementById('hud-energy').innerText = 'Low-Pressure Target';
+
+      if (extAnimId) cancelAnimationFrame(extAnimId);
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+
+      const narrations = [
+        `Stage 1: Descending toward the sea surface above ${sp.name}.`,
+        `Stage 2: Lowering the modular subsea collection dome over the outflow vent to prevent saltwater mixing.`,
+        `Stage 3: Routing naturally pressurized freshwater ashore into the low-pressure filtration unit.`,
+        `Stage 4: Purified natural water is now delivered to coastal greenhouses for drought-resilient agriculture.`
+      ];
+
+      extStart = performance.now();
+      let currentStage = 0, stageEnterTime = extStart;
+
+      function enterStage(stageIdx, now) {
+        currentStage = stageIdx; stageEnterTime = now;
+        stageSpeechDone = false; stageSpeechFinishedAt = 0;
+        highlightStepCard(stageIdx);
+        document.getElementById('sub-step').innerText = `Stage ${stageIdx + 1}/4 Active`;
+        document.getElementById('live-subtitle-text').innerText = `"${narrations[stageIdx]}"`;
+        speakNarration(narrations[stageIdx], () => {
+          stageSpeechDone = true; stageSpeechFinishedAt = performance.now();
+        });
+      }
+      enterStage(0, extStart);
+
+      function drawExtraction(now) {
+        if (systemState !== 'EXTRACTING') return;
+        const t = Math.max(0, (now - extStart) / 1000);
+        const stageElapsed = Math.max(0, (now - stageEnterTime) / 1000);
+        if (currentStage < 3) {
+          const visualReady = stageElapsed >= 4.5;
+          const voiceReady = voiceEnabled ? (stageSpeechDone && (now - stageSpeechFinishedAt >= 800)) : (stageElapsed >= 6.5);
+          if (visualReady && voiceReady) enterStage(currentStage + 1, now);
+        }
+        drawRealisticPipelineFrame(extCtx, extCanvas.width, extCanvas.height, t, currentStage, stageElapsed, sp.name);
+        extCtx.fillStyle = 'rgba(2, 6, 23, 0.88)'; extCtx.fillRect(16, 16, 460, 42);
+        extCtx.fillStyle = '#facc15'; extCtx.font = 'bold 15px sans-serif'; extCtx.textAlign = 'left';
+        extCtx.fillText(['1. SEA SURFACE DESCENT', '2. SUBSEA DOME PLACEMENT', '3. PUMPING & FILTRATION', '4. COASTAL GREENHOUSE IRRIGATION'][currentStage], 30, 42);
+        extAnimId = requestAnimationFrame(drawExtraction);
+      }
+      extAnimId = requestAnimationFrame(drawExtraction);
+    }
+
+    function returnToOrbit() {
+      if (extAnimId) cancelAnimationFrame(extAnimId);
+      if (speechSafetyTimer) { clearTimeout(speechSafetyTimer); speechSafetyTimer = null; }
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      extCanvas.style.display = 'none'; earthContainer.style.display = 'block';
+      document.getElementById('orbit-footer-hud').classList.remove('hidden'); document.getElementById('viewport-toast').classList.add('hidden');
+      highlightStepCard(-1);
+      const pBtn = document.getElementById('panel-descend-btn'); pBtn.disabled = true;
+      pBtn.className = 'px-3.5 py-2 rounded-lg bg-slate-800 text-slate-500 text-xs font-extrabold cursor-not-allowed';
+      pBtn.innerText = '⬇ Descend to Sea & Extract (Awaiting Lock)';
+      if (lockedSat) { lockedSat.beam.material.color.setHex(lockedSat.beamColor); lockedSat.beam.material.opacity = 0.24; }
+      lockedSat = null; systemState = 'SCANNING'; scanTimer = 0;
+      document.getElementById('alert-badge').innerText = 'ORBITAL SCANNING ACTIVE...';
+      document.getElementById('sub-step').innerText = 'Phase: Orbital Scan';
+      document.getElementById('live-subtitle-text').innerText = '"Returned to orbit. SAR satellites are scanning for the next coastal candidate..."';
+      focusMediterranean();
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      cloudLayer.rotation.y += 0.0008;
+      if (systemState === 'SCANNING') {
+        earth.rotation.y += 0.0012; scanTimer++;
+        satellites.forEach(sat => {
+          sat.angle += sat.speed;
+          const pos = new THREE.Vector3(Math.cos(sat.angle) * sat.radius, 0, Math.sin(sat.angle) * sat.radius);
+          pos.applyEuler(new THREE.Euler(sat.incX, sat.incZ, 0));
+          sat.group.position.copy(pos); sat.group.lookAt(0, 0, 0);
+          if (sat.isYellow && scanTimer > 70 && systemState === 'SCANNING') {
+            const satDir = pos.clone().normalize();
+            for (let i = 0; i < springs.length; i++) {
+              if (!springs[i].locked) {
+                const spWorld = new THREE.Vector3(); springMeshes[i].getWorldPosition(spWorld);
+                if (satDir.angleTo(spWorld.normalize()) < 0.28) { lockOntoSpring(sat, i); break; }
+              }
+            }
+          }
+        });
+      }
+      controls.update(); renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = earthContainer.clientWidth / earthContainer.clientHeight; camera.updateProjectionMatrix();
+      renderer.setSize(earthContainer.clientWidth, earthContainer.clientHeight);
+    });
+
+    function drawIllustrationToContext(ctx, type, ox, oy, w, h) {
+      ctx.save(); ctx.translate(ox, oy);
+      ctx.beginPath(); ctx.rect(0, 0, w, h); ctx.clip();
+      ctx.scale(w / 640, h / 400);
+
+      const g = ctx.createLinearGradient(0, 0, 640, 400); g.addColorStop(0, '#04142b'); g.addColorStop(1, '#082f49');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, 640, 400);
+      ctx.strokeStyle = 'rgba(56,189,248,0.12)'; ctx.lineWidth = 1;
+      for (let x = 0; x < 640; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 400); ctx.stroke(); }
+      for (let y = 0; y < 400; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(640, y); ctx.stroke(); }
+
+      if (type === 'globe') {
+        ctx.fillStyle = '#0284c7'; ctx.beginPath(); ctx.arc(320, 220, 96, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#15803d'; ctx.beginPath(); ctx.ellipse(295, 200, 46, 30, 0.2, 0, Math.PI * 2); ctx.fill();
+        [0.25, -0.35, 0.7].forEach((rot, i) => { ctx.strokeStyle = i === 0 ? '#facc15' : '#38bdf8'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(320, 220, 170, 52, rot, 0, Math.PI * 2); ctx.stroke(); });
+        ctx.fillStyle = '#10b981'; ctx.beginPath(); ctx.arc(348, 244, 8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#facc15'; ctx.fillRect(468, 198, 24, 14);
+        ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 15px sans-serif'; ctx.fillText('FIG 1. GLOBAL WATER BUDGET & MULTI-ORBIT SGD', 20, 34);
+      } else if (type === 'radar') {
+        ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.ellipse(320, 105, 185, 24, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#e2e8f0'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('STORM CLOUD LAYER (PENETRATED 24/7 BY L/S-BAND)', 320, 109);
+        ctx.fillStyle = '#0369a1'; ctx.fillRect(0, 230, 640, 170);
+        ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.ellipse(320, 244, 130, 16, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#facc15'; ctx.lineWidth = 3; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(320, 55, 55 + i * 45, 0.35 * Math.PI, 0.65 * Math.PI); ctx.stroke(); }
+        ctx.textAlign = 'left'; ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 15px sans-serif'; ctx.fillText('FIG 2. BRAGG RESONANCE & CAPILLARY WAVE DAMPING', 20, 34);
+      } else if (type === 'extraction') {
+        drawRealisticPipelineFrame(ctx, 640, 400, 3.0, 3, 4.0, 'Eastern Med. Candidate');
+      } else if (type === 'nasa') {
+        [{ n: 'NISAR (Jul 30, 2025)', d: '747 km • L/S-Band (24 / 9.4 cm) • >240 km Swath', c: '#38bdf8' },
+         { n: 'SWOT (Dec 16, 2022)', d: '891 km Science Orbit • KaRIn 120 km Swath', c: '#10b981' },
+         { n: 'GRACE-FO (May 22, 2018)', d: '~490 km Polar Twin • Micron Aquifer Gravity', c: '#facc15' }]
+        .forEach((m, i) => {
+          ctx.fillStyle = '#0f172a'; ctx.fillRect(45, 75 + i * 95, 550, 75); ctx.strokeStyle = m.c; ctx.lineWidth = 2; ctx.strokeRect(45, 75 + i * 95, 550, 75);
+          ctx.fillStyle = m.c; ctx.font = 'bold 18px sans-serif'; ctx.fillText(m.n, 65, 108 + i * 95); ctx.fillStyle = '#e2e8f0'; ctx.font = '14px sans-serif'; ctx.fillText(m.d, 65, 134 + i * 95);
+        });
+        ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 15px sans-serif'; ctx.fillText('FIG 4. NASA MULTI-MISSION CROSS-VALIDATION MATRIX', 20, 34);
+      } else if (type === 'economy') {
+        ctx.fillStyle = '#ef4444'; ctx.fillRect(110, 110, 135, 230);
+        ctx.fillStyle = '#38bdf8'; ctx.fillRect(285, 275, 110, 65);
+        ctx.fillStyle = '#10b981'; ctx.fillRect(435, 290, 110, 50);
+        ctx.fillStyle = '#f8fafc'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('SWRO Plant', 177, 365); ctx.fillText('3.5–4.5 kWh/m³', 177, 98);
+        ctx.fillText('Theor. Min', 340, 365); ctx.fillText('~1.07 kWh/m³', 340, 263);
+        ctx.fillText('SGD Target', 490, 365); ctx.fillText('Low-P Filter', 490, 278);
+        ctx.textAlign = 'left'; ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 15px sans-serif'; ctx.fillText('FIG 5. VERIFIED SWRO THERMODYNAMIC ENERGY BENCHMARK', 20, 34);
+      } else {
+        ['S1: Scope', 'S2: 3D Test', 'S3: Proof/PDF', 'S4: Delivery'].forEach((lbl, i) => {
+          const x = 85 + i * 155; ctx.fillStyle = i < 3 ? '#10b981' : '#38bdf8'; ctx.beginPath(); ctx.arc(x, 215, 28, 0, Math.PI * 2); ctx.fill();
+          if (i < 3) { ctx.strokeStyle = '#64748b'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x + 30, 215); ctx.lineTo(x + 125, 215); ctx.stroke(); }
+          ctx.fillStyle = '#f8fafc'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(lbl, x, 268);
+        });
+        ctx.fillStyle = '#facc15'; ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('GROUP GÖKİZ • NASA SPACE APPS NİĞDE (NOV 14–15, 2026)', 320, 120);
+        ctx.textAlign = 'left'; ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 15px sans-serif'; ctx.fillText('FIG 6. VERIFICATION GOVERNANCE & SPRINT EXECUTION', 20, 34);
+      }
+      ctx.restore();
+    }
+
+    function generateIllustrationURL(type) {
+      const c = document.createElement('canvas'); c.width = 640; c.height = 400;
+      drawIllustrationToContext(c.getContext('2d'), type, 0, 0, 640, 400);
+      return c.toDataURL('image/png');
+    }
+
+    const magazinePages = [
+      {
+        type: 'globe',
+        tag: '01 • GLOBAL WATER BUDGET & SGD PHYSICS',
+        title: 'Page 1: Hidden Freshwater Beneath Oceans & Empirical SGD Proof',
+        proof: 'WHY THIS DATA IS PROVEN: UNESCO (2006, WWDR II, p. 121) documents that ~30% of all freshwater on Earth resides in underground aquifers, whereas surface rivers and lakes hold barely ~1%. Peer-reviewed global hydrogeological models by Luijendijk et al. (2020, Nature Communications 11, 1260) and Zhou et al. (2019, Geophysical Research Letters 46, 5855–5863) calibrate coastal hydraulic gradients against Ra-223/224/226/228 isotope measurements and seepage meters (Moore, 2010), confirming that fresh Submarine Groundwater Discharge (FSGD) accounts for ~1% of global river flow while forming concentrated, harvestable coastal hotspots.',
+        body: `Coastal freshwater scarcity is accelerating across arid and semi-arid regions such as the Mediterranean Basin, the Red Sea rim, and island shelves. As inland surface reservoirs decline and municipal demand rises, coastal agriculture increasingly relies on energy-intensive desalination or over-pumping of coastal wells—which triggers irreversible saltwater intrusion into terrestrial aquifers.\n\nYet hydrogeological mass-balance studies demonstrate that vast networks of fractured carbonate and karstic coastal aquifers never terminate at the shoreline. Driven by inland topographic recharge and piezometric pressure heads higher than mean sea level, fresh groundwater travels through submarine conduits and discharges directly through the seabed onto continental shelves—a process termed Submarine Groundwater Discharge (SGD).\n\nWhy do global estimates matter locally? Early hydrological reviews (e.g., Oki & Kanae, 2006) estimated SGD broadly at 5–10% of river discharge. More precise modern 3D variable-density groundwater models by Zhou et al. (2019) and Luijendijk et al. (2020) refined fresh SGD (FSGD) to ~1% of total global river outflow. Crucially, unlike diffuse river mouths, karstic FSGD emerges through discrete submarine vents—such as the Antalya/Finike carbonate shelf in the Eastern Mediterranean, Sinop coastal karst in the Black Sea, and Florida Straits—creating localized freshwater plumes with huge regional agricultural potential.\n\nAquaVein-SAR models a four-satellite multi-orbit Synthetic Aperture Radar (SAR) constellation led by Yellow-SAR-1 to prioritize these coastal discharge zones non-invasively before any offshore drilling occurs.`
+      },
+      {
+        type: 'radar',
+        tag: '02 • ELECTROMAGNETIC SAR PHYSICS & BRAGG DAMPING',
+        title: 'Page 2: All-Weather SAR Physics & Why Surface Wave Damping Works',
+        proof: 'WHY THIS DATA IS PROVEN: As established in NATO RTO Educational Notes (Berens, 2007, RTO-EN-SET-086bis, pp. 3-1–3-16), optical and thermal infrared sensors fail whenever storm clouds, coastal fog, or darkness block the sea surface. Microwave SAR synthesizes a large virtual antenna via coherent Doppler phase integration along the satellite flight path. Ocean backscatter obeys Bragg resonance scattering (Rice, 1951; Valenzuela, 1978), where radar pulses scatter off short capillary-gravity waves (λ_Bragg = λ_radar / (2 sin θ)). NASA ARSET training (Johansson & Podest, 2022) and L-Band SAR studies (Jones & Holt, 2017–2021) verify that lower-density surface lenses damp short capillary waves, creating clear low-backscatter zones.',
+        body: `Detecting subtle submarine freshwater plumes from 747 km altitude requires overcoming two major remote-sensing obstacles: persistent coastal cloud cover and dynamic ocean waves. Passive optical satellites (such as standard RGB cameras) depend entirely on solar illumination and clear skies; thermal infrared sensors measure skin temperature (~10 µm) but are completely blocked by clouds.\n\nSynthetic Aperture Radar (SAR) overcomes both limits. By actively transmitting coherent microwave pulses—specifically L-Band (24 cm wavelength) and S-Band (9.4 cm wavelength), modeled on NASA–ISRO NISAR—and recording both amplitude and phase along the orbital trajectory, SAR achieves fine spatial resolution day and night through rain and storm clouds (Berens, 2007).\n\nHow does radar "see" underwater freshwater reaching the sea surface? Clean open ocean surfaces appear bright to moderate on SAR imagery because wind generates short gravity-capillary ripples (centimeter-scale) that satisfy the Bragg resonance condition (Rice, 1951; Valenzuela, 1978). However, when buoyant freshwater rises from a seabed karst spring, it spreads across the sea surface as a lower-density, lower-salinity lens with modified surface tension and density stratification.\n\nThis buoyant freshwater slick damps high-frequency capillary ripples and suppresses turbulent wind-wave regeneration (NASA ARSET, 2022). With fewer Bragg-resonant ripples, microwave energy reflects specularly away from the satellite receiver rather than backscattering toward it—producing a distinct dark, low-backscatter footprint that Yellow-SAR-1 isolates after multi-look speckle filtering.`
+      },
+      {
+        type: 'extraction',
+        tag: '03 • OFFSHORE SUBSEA DOME TO COASTAL GREENHOUSES',
+        title: 'Page 3: Subsea Extraction Engineering & Closed-Loop Irrigation Proof',
+        proof: 'WHY THIS ENGINEERING CONCEPT IS SOUND: Because fresh karstic groundwater has a density of ~1,000 kg/m³ versus ~1,025 kg/m³ for Mediterranean/ocean seawater, buoyant upward momentum and natural piezometric aquifer head drive outflow directly out of seabed vents. Capturing water inside an enclosed subsea dome above the vent intercepts the plume prior to turbulent entrainment and tidal dilution—preserving low Total Dissolved Solids (TDS) and avoiding the ~60–70 bar osmotic pressure barrier required to desalinate 35,000 mg/L seawater.',
+        body: `Locating an offshore spring from orbit solves only half of the challenge; harvesting it without contaminating the surrounding marine habitat or wasting energy requires precision subsea engineering. If a spring discharges freely into open water, wave shear and coastal currents rapidly mix the freshwater into 35,000 mg/L saline seawater within meters of the seabed.\n\nIn the AquaVein-SAR operational pipeline, once Yellow-SAR-1 confirms a persistent low-backscatter plume correlated with coastal aquifer discharge, a modular titanium-alloy and composite subsea collection dome is lowered directly onto the seabed vent. Flexible weighted skirt seals conform to the irregular karst limestone without requiring invasive seabed blasting or concrete foundations.\n\nInside the dome, natural piezometric aquifer pressure—the very force pushing groundwater up through the seabed—elevates low-salinity water into an insulated offshore riser pipe. Automated salinity (conductivity) sensors at the dome apex continuously regulate valve flow so intake never exceeds the natural aquifer discharge rate, preventing seawater draw-down into the coastal aquifer.\n\nThe captured low-TDS water is piped ashore to a compact, low-pressure polishing filtration station (multimedia and ultrafiltration) and routed directly to coastal hydroponic and drip-irrigated greenhouses. By substituting offshore lost springs for inland groundwater pumping, coastal regions gain drought-proof crop production while allowing depleted inland aquifers to recover.`
+      },
+      {
+        type: 'nasa',
+        tag: '04 • MULTI-MISSION NASA VALIDATION & PROVENANCE',
+        title: 'Page 4: Why Three Independent NASA Missions Validate This Pipeline',
+        proof: 'WHY THIS DATA IS PROVEN: Every orbital altitude, inclination, swath width, and launch date cited in AquaVein-SAR comes directly from official NASA JPL and NASA Science mission portals: (1) NASA–ISRO NISAR (Launched Jul 30, 2025; 747 km, 98.4°, 12-day repeat, >240 km swath, 12m mesh reflector; provisional L-band release Jul 20, 2026); (2) NASA/CNES SWOT (Launched Dec 16, 2022; 857/891 km, 77.6°, KaRIn 120 km swath); and (3) NASA/GFZ GRACE & GRACE-FO (Mar 17, 2002 – 2017; May 22, 2018, ~490 km polar orbit, micron ranging).',
+        body: `A frequent flaw in remote-sensing prototypes is relying on a single sensor signal that can be mimicked by wind shadows or algae blooms. AquaVein-SAR solves false positives by triangulating physics across three complementary NASA Earth-observing missions:\n\n1. NASA–ISRO NISAR (Launched July 30, 2025, Satish Dhawan Space Centre): Operating at 747 km altitude and 98.4° inclination with a 12-day repeat cycle and >240 km swath, NISAR is the first dual-frequency L-band (24 cm) and S-band (9.4 cm) spaceborne radar utilizing a 12-meter deployable gold-mesh reflector. L-band excels at penetrating vegetation/cloud moisture and resolving coastal backscatter contrasts, while open-access ASF DAAC calibration standards validate our radar detection model.\n\n2. NASA / CNES SWOT (Launched December 16, 2022, Vandenberg): Flying in an 891 km science orbit (77.6° inclination, 21-day repeat), SWOT's Ka-band Radar Interferometer (KaRIn, 120 km swath) maps submesoscale sea-surface height and coastal currents. Cross-checking SWOT topography prevents ocean eddies from being misclassified as submarine spring plumes.\n\n3. NASA / GFZ GRACE & GRACE-FO (GRACE 2002–2017; GRACE-FO May 22, 2018): Orbiting at ~490 km with micron-level K-band microwave and laser ranging between twin satellites, GRACE-FO tracks monthly regional gravity anomalies caused by terrestrial groundwater mass shifts—confirming where coastal aquifers are actively discharging freshwater toward the sea.\n\nTransparency Note: Live automated API ingestion of raw NISAR/SWOT raster tiles is scheduled for Phase 2; the current 3D constellation and 5 coastal pins are scientifically parameterized simulations.`
+      },
+      {
+        type: 'economy',
+        tag: '05 • THERMODYNAMIC ENERGY & BLUE ECONOMY PROOF',
+        title: 'Page 5: Thermodynamic Proof — Why Desalination Costs 3.5–4.5 kWh/m³',
+        proof: 'WHY THIS DATA IS PROVEN: Under solution thermodynamics, separating pure water from standard seawater (35,000 mg/L TDS, ~27 bar osmotic pressure) at 50% recovery imposes an inescapable theoretical minimum Gibbs free energy of ~1.07 kWh/m³. In real-world industrial operation, peer-reviewed desalination audits—MDPI (2024, "Cost Studies of Reverse Osmosis Desalination Plants") and Ludwig (2010, Desalination and Water Treatment 13, 13–25)—prove that full-plant Seawater Reverse Osmosis (SWRO) consumes 3.5–4.5 kWh/m³ including intake, 60–70 bar RO pumping, pre-treatment, and post-mineralization.',
+        body: `Why is coastal desalination so expensive and environmentally taxing? Seawater contains roughly 35 grams of dissolved salt per liter (35,000 mg/L TDS), exerting ~27 bar of natural osmotic pressure. To force freshwater backward through semi-permeable membranes at 40–50% recovery, SWRO plants must pressurize seawater to 60–70 bar continuously. Even with modern energy recovery devices (ERDs) and a theoretical thermodynamic floor of ~1.07 kWh/m³, real full-scale plants consistently consume 3.5–4.5 kWh/m³ (MDPI, 2024; Ludwig, 2010).\n\nFurthermore, for every cubic meter of drinking water produced, SWRO discharges roughly 1 to 1.5 cubic meters of hyper-saline brine (~70,000 mg/L TDS) laced with anti-scalants and cleaning chemicals back onto the seafloor. Because dense brine sinks, it depletes dissolved oxygen along the seabed and threatens sensitive Mediterranean Posidonia oceanica seagrass meadows and benthic fisheries.\n\nBy contrast, intercepting naturally pressurized, low-salinity submarine freshwater before full oceanic mixing completely sidesteps the 60–70 bar seawater osmotic barrier. Polishing filtration and low-head coastal transfer require only a fraction of SWRO electricity while producing zero hyper-saline brine reject.\n\nFor coastal nations facing severe agricultural droughts, routing this clean, low-energy water straight into coastal greenhouses stabilizes year-round fruit and vegetable harvests, reduces food-supply inflation, and protects coastal marine biodiversity.`
+      },
+      {
+        type: 'roadmap',
+        tag: '06 • VERIFICATION GOVERNANCE & GROUP GÖKİZ ROADMAP',
+        title: 'Page 6: Team Governance, Data Audit & 2026–2028 Deployment Plan',
+        proof: 'WHY THIS PLATFORM IS CREDIBLE: Every external claim in AquaVein-SAR is traced to 10 verified primary sources ([1]–[10] in the References section) covering NASA JPL mission portals, UN WWDR2 (2006), NATO RTO radar notes (2007), Nature Communications (2020), Geophysical Research Letters (2019), and MDPI (2024). Simulation scenarios are explicitly separated from empirical benchmarks to uphold full NASA Space Apps scientific integrity.',
+        body: `AquaVein-SAR was architected and built by Group Gökiz for the NASA Space Apps Challenge Niğde (November 14–15, 2026) under strict role governance:\n• Yusuf Emir Savcı (Team Captain): 3D WebGL NASA Blue Marble globe, NISAR-class satellite modeling, and system architecture.\n• Mine Yıldırım (Team Owner): Product strategy, Scrum coordination, and Blue Economy thermodynamic analysis.\n• Elif Doğan Yılmaz (Team Member): Cross-verification of NASA NISAR, SWOT, GRACE-FO, UNESCO, and MDPI primary sources.\n• Hülya Naz Çubukçu (Team Member): Subsea-to-greenhouse animation design, preloaded 6-page monograph PDF, and external QR access UX.\n\nSprint Verification Summary (Nov 14–15, 2026):\n• Sprint 1 (Scope & Candidates): Mapped SGD problem and 5 global/Turkish coastal candidates (Finike/Antalya & Sinop offshore).\n• Sprint 2 (Technical Validation): Replaced simplified spheres with real NASA Blue Marble topography, specular oceans, cloud layers, and speech-synchronized subsea simulation.\n• Sprint 3 (Scientific Monograph): Expanded this strictly 6-page technical monograph with built-in proof callouts and preloaded zero-error PDF export.\n• Sprint 4 (Deployment & External Share): Packaged clean GitHub Pages files with standalone QR sharing cards and final jury delivery.\n\nPhase 2–4 Roadmap (2026–2028): Integrate live ASF DAAC NISAR L1/L2 GeoTIFF & SWOT KaRIn coastal APIs, conduct autonomous AUV acoustic verification over Mediterranean karst vents, and deploy pilot coastal dome-to-greenhouse cooperatives.`
+      }
+    ];
+
+    let currentPage = 0;
+    function renderMagazine() {
+      const p = magazinePages[currentPage];
+      const imgUrl = generateIllustrationURL(p.type);
+      document.getElementById('page-pills').innerHTML = magazinePages.map((_, i) => `<button onclick="currentPage=${i};renderMagazine()" class="w-8 h-8 rounded-lg text-xs font-bold cursor-pointer ${i === currentPage ? 'bg-sky-500 text-slate-950' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">${i + 1}</button>`).join('');
+      document.getElementById('magazine-card').innerHTML = `
+        <div class="lg:col-span-5 space-y-4">
+          <img src="${imgUrl}" alt="${p.title}" class="w-full rounded-xl border border-slate-700 shadow-lg" />
+          <div class="bg-emerald-950/45 border border-emerald-500/40 rounded-xl p-4 space-y-1.5">
+            <div class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-400">Scientific Proof &amp; Verification</div>
+            <p class="text-xs text-slate-200 leading-relaxed">${p.proof}</p>
+          </div>
+        </div>
+        <div class="lg:col-span-7 space-y-4">
+          <span class="text-xs font-bold tracking-widest text-sky-400 uppercase">${p.tag}</span>
+          <h3 class="text-2xl font-bold leading-snug text-white">${p.title}</h3>
+          <p class="text-slate-300 text-sm leading-relaxed whitespace-pre-line">${p.body}</p>
+        </div>`;
+    }
+    function changePage(d) { currentPage = (currentPage + d + 6) % 6; renderMagazine(); }
+    renderMagazine();
+
+    let preloadedPdfUrl = null;
+    function wrapParagraphs(ctx, text, maxW) {
+      const out = [];
+      text.split('\n').forEach((par) => {
+        if (!par.trim()) { out.push(''); return; }
+        const words = par.split(' ');
+        let line = '';
+        words.forEach((w) => {
+          const test = line ? line + ' ' + w : w;
+          if (ctx.measureText(test).width > maxW && line) { out.push(line); line = w; }
+          else line = test;
+        });
+        if (line) out.push(line);
+        out.push('');
+      });
+      return out;
+    }
+
+    function prebuildFull6PagePDF() {
+      const statusEl = document.getElementById('pdf-status-text');
+      try {
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+          statusEl.innerText = '⚠️ jsPDF library unavailable offline; interactive E-Magazine remains active above.';
+          return;
+        }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+        const c = document.createElement('canvas'); c.width = 1754; c.height = 1240;
+        const ctx = c.getContext('2d');
+
+        magazinePages.forEach((p, idx) => {
+          if (idx > 0) doc.addPage();
+          const bg = ctx.createLinearGradient(0, 0, 1754, 1240);
+          bg.addColorStop(0, '#040d1d'); bg.addColorStop(1, '#081d38');
+          ctx.fillStyle = bg; ctx.fillRect(0, 0, 1754, 1240);
+
+          ctx.fillStyle = '#38bdf8'; ctx.fillRect(0, 0, 1754, 8);
+          ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 21px sans-serif'; ctx.textAlign = 'left';
+          ctx.fillText(`AQUAVEIN-SAR TECHNICAL MONOGRAPH  •  GROUP GÖKİZ  •  ${p.tag}`, 60, 58);
+          ctx.fillStyle = '#94a3b8'; ctx.textAlign = 'right';
+          ctx.fillText(`PAGE ${idx + 1} OF 6`, 1694, 58);
+
+          ctx.textAlign = 'left';
+          ctx.fillStyle = '#facc15'; ctx.font = 'bold 34px sans-serif';
+          ctx.fillText(p.title, 60, 114);
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(60, 134); ctx.lineTo(1694, 134); ctx.stroke();
+
+          drawIllustrationToContext(ctx, p.type, 60, 160, 690, 431);
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)'; ctx.lineWidth = 2;
+          ctx.strokeRect(60, 160, 690, 431);
+
+          ctx.fillStyle = 'rgba(6, 78, 59, 0.42)'; ctx.fillRect(60, 616, 690, 540);
+          ctx.strokeStyle = '#10b981'; ctx.lineWidth = 2; ctx.strokeRect(60, 616, 690, 540);
+          ctx.fillStyle = '#34d399'; ctx.font = 'bold 20px sans-serif';
+          ctx.fillText('SCIENTIFIC PROOF & VERIFICATION', 84, 654);
+
+          let pFont = 19, proofLines = [];
+          while (pFont >= 14) {
+            ctx.font = `${pFont}px sans-serif`;
+            proofLines = wrapParagraphs(ctx, p.proof, 642);
+            const hNeeded = proofLines.reduce((acc, l) => acc + (l === '' ? 10 : pFont + 8), 0);
+            if (hNeeded <= 465) break;
+            pFont--;
+          }
+          ctx.fillStyle = '#e2e8f0';
+          let py = 692;
+          proofLines.forEach(l => {
+            if (l === '') py += 10;
+            else { ctx.fillText(l, 84, py); py += pFont + 8; }
+          });
+
+          let bFont = 21, bodyLines = [];
+          while (bFont >= 14) {
+            ctx.font = `${bFont}px sans-serif`;
+            bodyLines = wrapParagraphs(ctx, p.body, 895);
+            const hNeeded = bodyLines.reduce((acc, l) => acc + (l === '' ? 13 : bFont + 8), 0);
+            if (hNeeded <= 975) break;
+            bFont--;
+          }
+          ctx.fillStyle = '#f1f5f9';
+          let by = 188;
+          bodyLines.forEach(l => {
+            if (l === '') by += 13;
+            else { ctx.fillText(l, 795, by); by += bFont + 8; }
+          });
+
+          ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)'; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(60, 1180); ctx.lineTo(1694, 1180); ctx.stroke();
+          ctx.fillStyle = '#94a3b8'; ctx.font = '17px sans-serif';
+          ctx.fillText('NASA Space Apps Challenge Niğde (Nov 14–15, 2026)  •  Refs: NISAR (2025), SWOT (2022), GRACE-FO (2018), UNESCO (2006 p.121), Berens (2007), Nature (2020), MDPI (2024)', 60, 1212);
+
+          doc.addImage(c.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 297, 210);
+        });
+
+        const pdfBlob = doc.output('blob');
+        if (preloadedPdfUrl) URL.revokeObjectURL(preloadedPdfUrl);
+        preloadedPdfUrl = URL.createObjectURL(pdfBlob);
+
+        document.getElementById('preloaded-pdf-download').href = preloadedPdfUrl;
+        document.getElementById('preloaded-pdf-open').href = preloadedPdfUrl;
+        document.getElementById('pdf-viewer-frame').src = preloadedPdfUrl;
+        statusEl.innerText = `✅ 6-Page PDF Preloaded & Ready (${(pdfBlob.size / (1024 * 1024)).toFixed(2)} MB • Strictly 6/6 Pages • Zero Errors)`;
+      } catch (err) {
+        statusEl.innerText = '⚠️ PDF preload fallback active: ' + err.message;
+      }
+    }
+
+    function togglePdfEmbed() {
+      const wrap = document.getElementById('pdf-embed-wrap');
+      const btn = document.getElementById('btn-toggle-pdf');
+      const hidden = wrap.classList.contains('hidden');
+      if (hidden) { wrap.classList.remove('hidden'); btn.innerText = '✖ Hide Embedded PDF'; }
+      else { wrap.classList.add('hidden'); btn.innerText = '📄 View Preloaded PDF Live'; }
+    }
+
+    // Automatically preloads the 6-page PDF & handles ?view=emagazine deep link from external QR2
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        prebuildFull6PagePDF();
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('view') === 'emagazine' || window.location.hash === '#emagazine') {
+          const emagEl = document.getElementById('emagazine');
+          document.getElementById('pdf-embed-wrap').classList.remove('hidden');
+          document.getElementById('btn-toggle-pdf').innerText = '✖ Hide Embedded PDF';
+          setTimeout(() => emagEl.scrollIntoView({ behavior: 'smooth' }), 200);
+        }
+      }, 120);
+    });
+  </script>
+</body>
+</html>
